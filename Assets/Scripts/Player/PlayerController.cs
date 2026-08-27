@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 
@@ -61,18 +62,35 @@ namespace FoodSurvivors.Player
 
         private void HandleMovement()
         {
-            float moveX = Input.GetAxisRaw("Horizontal");
-            float moveZ = Input.GetAxisRaw("Vertical");
+            Vector2 input = Vector2.zero;
 
-            Vector3 moveDirection = new Vector3(moveX, 0f, moveZ).normalized;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) input.y += 1f;
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) input.y -= 1f;
+                if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) input.x -= 1f;
+                if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) input.x += 1f;
+            }
 
-            if (moveDirection.magnitude > 0.1f)
+            if (Gamepad.current != null)
+            {
+                Vector2 stick = Gamepad.current.leftStick.ReadValue();
+                if (stick.sqrMagnitude > 0.01f)
+                {
+                    input += stick;
+                }
+            }
+
+            input = Vector2.ClampMagnitude(input, 1f);
+            Vector3 moveDirection = new Vector3(input.x, 0f, input.y);
+
+            if (moveDirection.sqrMagnitude > 0.01f)
             {
                 // Move position
                 transform.position += moveDirection * (currentMoveSpeed * Time.deltaTime);
 
                 // Rotate towards movement direction smoothly
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection.normalized, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
             }
         }

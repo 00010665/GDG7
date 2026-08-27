@@ -3,6 +3,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using TMPro;
 using FoodSurvivors.Core;
 using FoodSurvivors.UI;
@@ -28,11 +29,19 @@ namespace FoodSurvivors.EditorTools
             canvasObj.AddComponent<CanvasScaler>();
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            if (Object.FindFirstObjectByType<EventSystem>() == null)
+            GameObject esObj = Object.FindFirstObjectByType<EventSystem>()?.gameObject;
+            if (esObj == null)
             {
-                GameObject esObj = new GameObject("EventSystem");
+                esObj = new GameObject("EventSystem");
                 esObj.AddComponent<EventSystem>();
-                esObj.AddComponent<StandaloneInputModule>();
+                esObj.AddComponent<InputSystemUIInputModule>();
+            }
+            else
+            {
+                if (esObj.GetComponent<InputSystemUIInputModule>() == null)
+                {
+                    esObj.AddComponent<InputSystemUIInputModule>();
+                }
             }
 
             // 3. MainMenuUI Manager Component
