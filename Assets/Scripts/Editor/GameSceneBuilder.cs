@@ -3,6 +3,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using FoodSurvivors.Core;
 using FoodSurvivors.Player;
+using FoodSurvivors.Weapons;
 
 namespace FoodSurvivors.EditorTools
 {
@@ -11,7 +12,6 @@ namespace FoodSurvivors.EditorTools
         [MenuItem("FoodSurvivors/Build Game Scene")]
         public static void BuildGameScene()
         {
-            // Create new scene
             var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             // 1. Directional Light
@@ -27,7 +27,6 @@ namespace FoodSurvivors.EditorTools
             planeObj.transform.position = Vector3.zero;
             planeObj.transform.localScale = new Vector3(5f, 1f, 5f); // 50x50 units
 
-            // Set ground color/material if possible
             Renderer planeRenderer = planeObj.GetComponent<Renderer>();
             if (planeRenderer != null)
             {
@@ -42,7 +41,8 @@ namespace FoodSurvivors.EditorTools
             playerObj.tag = "Player";
             playerObj.transform.position = new Vector3(0f, 1f, 0f);
 
-            PlayerController pc = playerObj.AddComponent<PlayerController>();
+            playerObj.AddComponent<PlayerController>();
+            playerObj.AddComponent<WeaponManager>();
 
             // 4. Main Camera
             GameObject camObj = new GameObject("Main Camera");
