@@ -44,7 +44,11 @@ namespace FoodSurvivors.EditorTools
             playerObj.AddComponent<PlayerController>();
             playerObj.AddComponent<WeaponManager>();
 
-            // 4. Main Camera
+            // 4. WaveManager GameObject
+            GameObject waveManagerObj = new GameObject("[WaveManager]");
+            waveManagerObj.AddComponent<WaveManager>();
+
+            // 5. Main Camera
             GameObject camObj = new GameObject("Main Camera");
             camObj.tag = "MainCamera";
             Camera cam = camObj.AddComponent<Camera>();
