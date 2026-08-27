@@ -1,14 +1,15 @@
 {
   "dependencies": {
     "com.besty.unity-skills": {
-      "version": "file:com.besty.unity-skills",
+      "version": "https://github.com/Besty0728/Unity-Skills.git?path=/SkillsForUnity",
       "depth": 0,
-      "source": "embedded",
+      "source": "git",
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.timeline": "1.7.7",
         "com.unity.ugui": "1.0.0"
-      }
+      },
+      "hash": "61f72e2631c4ffcc4ed7f3358a241c6d6ef7b51d"
     },
     "com.coplaydev.unity-mcp": {
       "version": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
