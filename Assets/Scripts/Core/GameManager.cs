@@ -1,148 +1,75 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using FoodSurvivors.Data;
 
-public class GameManager : MonoBehaviour
+namespace FoodSurvivors.Core
 {
-    [Header("References")]
-    public Player player;
-    public WaveManager waveManager;
-    public LevelManager levelManager;
-    public UIManager uiManager;
-
-    [Header("Game State")]
-    public int currentLevelIndex = 0;
-    public int currentWaveIndex = 0;
-    public bool gameRunning = false;
-    public bool gamePaused = false;
-    public bool gameOver = false;
-
-    [Header("Level Data")]
-    public LevelData currentLevelData;
-
-    private List<FoodData> availableFoods = new List<FoodData>();
-    private List<PassiveAbilityData> unlockedPassives = new List<PassiveAbilityData>();
-
-    void Awake()
+    public class GameManager : MonoBehaviour
     {
-        LoadGameData();
-    }
+        public static GameManager Instance { get; private set; }
 
-    void Start()
-    {
-        InitializeGame();
-    }
+        [Header("Selection Data")]
+        public ChefData selectedChef;
+        public LevelData selectedLevel;
 
-    void InitializeGame()
-    {
-        if (currentLevelIndex >= currentLevelData.levels.Length)
+        [Header("Available Data Catalog")]
+        public List<ChefData> availableChefs = new List<ChefData>();
+        public List<LevelData> availableLevels = new List<LevelData>();
+
+        private void Awake()
         {
-            GameOver();
-            return;
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
 
-        currentLevelData = currentLevelData.levels[currentLevelIndex];
-        waveManager.SetLevelData(currentLevelData);
-        gameRunning = true;
-        gamePaused = false;
-        gameOver = false;
-        currentWaveIndex = 0;
-    }
-
-    public void StartNextWave()
-    {
-        if (currentWaveIndex >= currentLevelData.enemies.Length)
+        public void SelectChef(ChefData chef)
         {
-            waveManager.SetBossWave(currentLevelData);
-            return;
+            selectedChef = chef;
+            Debug.Log($"[GameManager] Selected Chef: {(chef != null ? chef.chefName : "None")}");
         }
 
-        currentWaveIndex++;
-        waveManager.StartWave(currentLevelData.enemies[currentWaveIndex - 1]);
-    }
-
-    public void EndLevel()
-    {
-        gameRunning = false;
-        waveManager.EndWave();
-
-        if (currentLevelIndex < currentLevelData.levels.Length - 1)
+        public void SelectLevel(LevelData level)
         {
-            currentLevelIndex++;
-            InitializeGame();
+            selectedLevel = level;
+            Debug.Log($"[GameManager] Selected Level: {(level != null ? level.levelName : "None")}");
         }
-        else
+
+        public void StartGame()
         {
-            GameOver();
+            if (selectedChef == null && availableChefs.Count > 0)
+            {
+                selectedChef = availableChefs[0];
+            }
+
+            if (selectedLevel == null && availableLevels.Count > 0)
+            {
+                selectedLevel = availableLevels[0];
+            }
+
+            Debug.Log($"[GameManager] Starting game with Chef: {(selectedChef != null ? selectedChef.chefName : "Default")} and Level: {(selectedLevel != null ? selectedLevel.levelName : "Default")}");
+            SceneManager.LoadScene("GameScene");
         }
-    }
 
-    public void GameOver()
-    {
-        gameRunning = false;
-        gameOver = true;
-    }
-
-    public void PauseGame()
-    {
-        gamePaused = true;
-    }
-
-    public void UnpauseGame()
-    {
-        gamePaused = false;
-    }
-
-    public void AddFoodToInventory(FoodData food)
-    {
-        if (!availableFoods.Contains(food))
+        public void ReturnToMenu()
         {
-            availableFoods.Add(food);
+            Debug.Log("[GameManager] Returning to Main Menu");
+            SceneManager.LoadScene("MainMenuScene");
         }
-    }
 
-    public void UnlockPassive(PassiveAbilityData passive)
-    {
-        if (!unlockedPassives.Contains(passive))
+        public void QuitGame()
         {
-            unlockedPassives.Add(passive);
+            Debug.Log("[GameManager] Quitting Game...");
+            Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
         }
-    }
-
-    public List<FoodData> GetAvailableFoods()
-    {
-        return availableFoods;
-    }
-
-    public List<PassiveAbilityData> GetUnlockedPassives()
-    {
-        return unlockedPassives;
-    }
-
-    public LevelData GetCurrentLevelData()
-    {
-        return currentLevelData;
-    }
-
-    public void SaveGame()
-    {
-        // Save game state
-    }
-
-    public void LoadGame()
-    {
-        // Load game state
-    }
-
-    private void LoadGameData()
-    {
-        // Load game data from JSON
-    }
-
-    private void SaveGameData()
-    {
-        // Save game data to JSON
     }
 }
