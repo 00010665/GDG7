@@ -65,6 +65,7 @@ namespace FoodSurvivors.UI
                 levelUpPanel.SetActive(true);
             }
 
+            Debug.Log("[LevelUpUI] Opening Level-Up window. Pausing game.");
             GenerateUpgradeOptions();
             DisplayOptions();
         }

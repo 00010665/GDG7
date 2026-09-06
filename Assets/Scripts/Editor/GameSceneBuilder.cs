@@ -26,18 +26,23 @@ namespace FoodSurvivors.EditorTools
             lightComponent.intensity = 1.2f;
             lightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
-            // 2. Ground Plane Arena
+            // 2. Ground Plane Arena (зелёный шахматный пол)
             GameObject planeObj = GameObject.CreatePrimitive(PrimitiveType.Plane);
             planeObj.name = "ArenaGround";
             planeObj.transform.position = Vector3.zero;
-            planeObj.transform.localScale = new Vector3(5f, 1f, 5f); // 50x50 units
+            planeObj.transform.localScale = new Vector3(10f, 1f, 10f); // 100x100 units
 
             Renderer planeRenderer = planeObj.GetComponent<Renderer>();
             if (planeRenderer != null)
             {
-                Material groundMat = new Material(Shader.Find("Standard"));
-                groundMat.color = new Color(0.25f, 0.3f, 0.25f);
-                planeRenderer.material = groundMat;
+                // Используем DefaultMaterialsGenerator для получения яркого зелёного шахматного материала
+                planeRenderer.sharedMaterial = DefaultMaterialsGenerator.GetArenaCheckerboardMaterial();
+            }
+
+            // Дополнительный скрипт GridGroundSetup, если существует
+            if (planeObj.GetComponent<GridGroundSetup>() == null)
+            {
+                planeObj.AddComponent<GridGroundSetup>();
             }
 
             // 3. Player GameObject (3D Capsule)
@@ -50,6 +55,13 @@ namespace FoodSurvivors.EditorTools
             playerObj.AddComponent<PlayerVisuals>();
             playerObj.AddComponent<WeaponManager>();
             playerObj.AddComponent<PassiveManager>();
+
+            // Применяем ярко-голубой материал игрока
+            Renderer playerRend = playerObj.GetComponent<Renderer>();
+            if (playerRend != null)
+            {
+                playerRend.sharedMaterial = DefaultMaterialsGenerator.GetPlayerMaterial();
+            }
 
             // 4. WaveManager & ExperienceManager GameObjects
             GameObject waveManagerObj = new GameObject("[WaveManager]");
@@ -117,7 +129,7 @@ namespace FoodSurvivors.EditorTools
             levelUpPanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.85f);
             levelUpUI.levelUpPanel = levelUpPanel;
 
-            CreateText("LevelUpTitle", "⚡ НОВЫЙ УРОВЕНЬ! ⚡", levelUpPanel.transform, new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), Vector2.zero, new Vector2(600, 80), 38f, TextAlignmentOptions.Center);
+            CreateText("LevelUpTitle", "НОВЫЙ УРОВЕНЬ!", levelUpPanel.transform, new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), Vector2.zero, new Vector2(600, 80), 38f, TextAlignmentOptions.Center);
 
             levelUpUI.cardButtons = new Button[3];
             levelUpUI.cardTitleTexts = new TextMeshProUGUI[3];
@@ -173,9 +185,9 @@ namespace FoodSurvivors.EditorTools
             gameOverUI.titleText = CreateText("GameOverTitle", "💀 ПОРАЖЕНИЕ 💀", gameOverPanel.transform, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), Vector2.zero, new Vector2(600, 80), 44f, TextAlignmentOptions.Center);
             gameOverUI.statsText = CreateText("GameOverStats", "Время в бою: 00:00\nДостигнутый уровень: 1", gameOverPanel.transform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), Vector2.zero, new Vector2(500, 100), 24f, TextAlignmentOptions.Center);
 
-            CreateButton("BtnRestart", "🔄 Играть Заново", gameOverPanel.transform, new Vector2(0, -20), new Vector2(280, 55), () => gameOverUI.OnClickRestart());
-            CreateButton("BtnMainMenu", "🏠 Главное Меню", gameOverPanel.transform, new Vector2(0, -90), new Vector2(280, 50), () => gameOverUI.OnClickMainMenu());
-            CreateButton("BtnQuit", "❌ Выход", gameOverPanel.transform, new Vector2(0, -155), new Vector2(280, 45), () => gameOverUI.OnClickQuit());
+            CreateButton("BtnRestart", "Играть Заново", gameOverPanel.transform, new Vector2(0, -20), new Vector2(280, 55), () => gameOverUI.OnClickRestart());
+            CreateButton("BtnMainMenu", "Главное Меню", gameOverPanel.transform, new Vector2(0, -90), new Vector2(280, 50), () => gameOverUI.OnClickMainMenu());
+            CreateButton("BtnQuit", "Выход", gameOverPanel.transform, new Vector2(0, -155), new Vector2(280, 45), () => gameOverUI.OnClickQuit());
 
             gameOverPanel.SetActive(false);
 

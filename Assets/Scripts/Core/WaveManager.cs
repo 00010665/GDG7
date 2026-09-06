@@ -18,6 +18,9 @@ namespace FoodSurvivors.Core
         private bool bossSpawned = false;
         private List<float> waveTimers = new List<float>();
 
+        private float fallbackSpawnTimer = 0f;
+        private float fallbackSpawnInterval = 2f;
+
         private void Start()
         {
             Time.timeScale = 1f;
@@ -40,12 +43,53 @@ namespace FoodSurvivors.Core
             }
 #endif
 
+            // Если всё равно нет LevelData — создаём дефолтный уровень 1 (synthetic runtime level)
+            if (currentLevelData == null)
+            {
+                Debug.LogWarning("[WaveManager] No LevelData found, creating synthetic default Level 1.");
+                currentLevelData = CreateDefaultLevel1();
+            }
+
             InitWaveTimers();
 
-            if (AudioManager.Instance != null && currentLevelData != null)
+            if (AudioManager.Instance != null && currentLevelData != null && currentLevelData.backgroundMusic != null)
             {
                 AudioManager.Instance.PlayBGM(currentLevelData.backgroundMusic);
             }
+
+            Debug.Log($"[WaveManager] Started. Level: {currentLevelData.levelName}, Waves: {(currentLevelData.waves != null ? currentLevelData.waves.Count : 0)}");
+        }
+
+        // Создаёт дефолтный runtime Level 1 с одним типом врага
+        private LevelData CreateDefaultLevel1()
+        {
+            LevelData level = ScriptableObject.CreateInstance<LevelData>();
+            level.levelName = "Уровень 1 (По умолчанию)";
+            level.description = "Автоматически созданный уровень при отсутствии данных";
+            level.levelDuration = 60f;
+
+            // Создаём дефолтного врага
+            EnemyData defaultEnemy = ScriptableObject.CreateInstance<EnemyData>();
+            defaultEnemy.enemyName = "Турист";
+            defaultEnemy.maxHealth = 20f;
+            defaultEnemy.moveSpeed = 3f;
+            defaultEnemy.damage = 5f;
+            defaultEnemy.armor = 0f;
+            defaultEnemy.xpValue = 5;
+            defaultEnemy.isBoss = false;
+            defaultEnemy.enemyColor = Color.red;
+
+            WaveData wave = new WaveData
+            {
+                enemy = defaultEnemy,
+                startTime = 0f,
+                endTime = 9999f, // бесконечная волна
+                spawnInterval = 2f,
+                spawnCountPerTick = 1
+            };
+
+            level.waves = new List<WaveData> { wave };
+            return level;
         }
 
         private void FindPlayer()
@@ -83,6 +127,16 @@ namespace FoodSurvivors.Core
             {
                 ProcessWaves();
                 CheckBossSpawn();
+            }
+            else
+            {
+                // Fallback: спавним по таймеру если currentLevelData не загружен
+                fallbackSpawnTimer -= Time.deltaTime;
+                if (fallbackSpawnTimer <= 0f && GameManager.Instance != null)
+                {
+                    fallbackSpawnTimer = fallbackSpawnInterval;
+                    Debug.Log($"[WaveManager] Fallback spawn tick around player (Radius: {spawnRadius})");
+                }
             }
         }
 
@@ -151,6 +205,32 @@ namespace FoodSurvivors.Core
 
             enemyObj.transform.position = spawnPos;
 
+            // Масштаб босса — 2.5x для заметности
+            if (isBoss)
+            {
+                enemyObj.transform.localScale = Vector3.one * 2.5f;
+            }
+
+            // Назначаем яркие материалы по типу
+            Renderer rend = enemyObj.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                if (isBoss)
+                {
+                    rend.sharedMaterial = DefaultMaterialsGenerator.GetBossMaterial();
+                }
+                else if (enemyData != null && enemyData.moveSpeed >= 5f)
+                {
+                    // Быстрый враг — оранжевый
+                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyFastMaterial();
+                }
+                else
+                {
+                    // Обычный враг — красный
+                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyNormalMaterial();
+                }
+            }
+
             Collider col = enemyObj.GetComponent<Collider>();
             if (col != null) col.isTrigger = false;
 
@@ -165,6 +245,25 @@ namespace FoodSurvivors.Core
             EnemyVisuals visuals = enemyObj.AddComponent<EnemyVisuals>();
             enemyCtrl.Initialize(enemyData);
             visuals.ApplyEnemyVisuals(enemyData);
+
+            // Переопределяем материал ещё раз после инициализации (на случай если EnemyController перезаписал)
+            if (rend != null)
+            {
+                if (isBoss)
+                {
+                    rend.sharedMaterial = DefaultMaterialsGenerator.GetBossMaterial();
+                }
+                else if (enemyData.moveSpeed >= 5f)
+                {
+                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyFastMaterial();
+                }
+                else
+                {
+                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyNormalMaterial();
+                }
+            }
+
+            Debug.Log($"[WaveManager] Spawned enemy: {enemyObj.name} at {spawnPos} (Radius: {spawnRadius})");
 
             return enemyObj;
         }

@@ -19,6 +19,19 @@ namespace FoodSurvivors.EditorTools
             // Create new empty scene
             var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
+            // 0. Main Camera (orthographic, MainCamera tag, fixed transform)
+            GameObject camObj = new GameObject("Main Camera");
+            camObj.tag = "MainCamera";
+            Camera cam = camObj.AddComponent<Camera>();
+            camObj.AddComponent<AudioListener>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.1f, 0.1f, 0.15f, 1f);
+            cam.orthographic = true;
+            cam.orthographicSize = 5f;
+            camObj.transform.position = new Vector3(0f, 0f, -10f);
+            camObj.transform.rotation = Quaternion.identity;
+            camObj.transform.localScale = Vector3.one;
+
             // 1. GameManager GameObject
             GameObject gmObj = new GameObject("[GameManager]");
             var gmComponent = gmObj.AddComponent<GameManager>();
@@ -73,16 +86,16 @@ namespace FoodSurvivors.EditorTools
 
             // Create Main Menu Panel
             GameObject mainMenuPanel = CreatePanel("MainMenuPanel", canvasObj.transform, new Color(0.1f, 0.1f, 0.15f, 1f));
-            CreateText("Title", "🍳 FOOD SURVIVORS 🍳", mainMenuPanel.transform, new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f), Vector2.zero, new Vector2(600, 100), 42f);
+            CreateText("Title", "FOOD SURVIVORS", mainMenuPanel.transform, new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f), Vector2.zero, new Vector2(600, 100), 42f);
 
-            CreateButton("BtnChef", "👨‍🍳 Выбор Шеф-повара", mainMenuPanel.transform, new Vector2(0, 80), new Vector2(300, 50), () => menuUI.ShowChefSelection());
-            CreateButton("BtnLevel", "🗺️ Выбор Уровня", mainMenuPanel.transform, new Vector2(0, 10), new Vector2(300, 50), () => menuUI.ShowLevelSelection());
-            CreateButton("BtnStart", "⚔️ В БОЙ!", mainMenuPanel.transform, new Vector2(0, -60), new Vector2(300, 60), () => menuUI.OnClickStartGame());
-            CreateButton("BtnQuit", "❌ Выход", mainMenuPanel.transform, new Vector2(0, -140), new Vector2(300, 40), () => menuUI.OnClickQuitGame());
+            CreateButton("BtnChef", "Выбор Шеф-повара", mainMenuPanel.transform, new Vector2(0, 80), new Vector2(300, 50), () => menuUI.ShowChefSelection());
+            CreateButton("BtnLevel", "Выбор Уровня", mainMenuPanel.transform, new Vector2(0, 10), new Vector2(300, 50), () => menuUI.ShowLevelSelection());
+            CreateButton("BtnStart", "В БОЙ!", mainMenuPanel.transform, new Vector2(0, -60), new Vector2(300, 60), () => menuUI.OnStartGameButtonClicked());
+            CreateButton("BtnQuit", "Выход", mainMenuPanel.transform, new Vector2(0, -140), new Vector2(300, 40), () => menuUI.OnClickQuitGame());
 
             // Create Chef Select Panel
             GameObject chefPanel = CreatePanel("ChefSelectPanel", canvasObj.transform, new Color(0.15f, 0.1f, 0.1f, 1f));
-            CreateText("ChefHeader", "👨‍🍳 Выбор Шеф-повара", chefPanel.transform, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), Vector2.zero, new Vector2(500, 60), 32f);
+            CreateText("ChefHeader", "Выбор Шеф-повара", chefPanel.transform, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), Vector2.zero, new Vector2(500, 60), 32f);
 
             menuUI.chefNameText = CreateText("ChefName", "Имя Повара", chefPanel.transform, new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f), Vector2.zero, new Vector2(400, 40), 28f);
             menuUI.chefDescriptionText = CreateText("ChefDesc", "Описание повара...", chefPanel.transform, new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f), Vector2.zero, new Vector2(500, 40), 20f);
@@ -103,11 +116,11 @@ namespace FoodSurvivors.EditorTools
 
             CreateButton("BtnPrevChef", "< Пред.", chefPanel.transform, new Vector2(-200, 80), new Vector2(100, 50), () => menuUI.PreviousChef());
             CreateButton("BtnNextChef", "След. >", chefPanel.transform, new Vector2(200, 80), new Vector2(100, 50), () => menuUI.NextChef());
-            CreateButton("BtnBackChef", "◀ Назад в Меню", chefPanel.transform, new Vector2(0, -200), new Vector2(250, 50), () => menuUI.ShowMainMenu());
+            CreateButton("BtnBackChef", "Назад в Меню", chefPanel.transform, new Vector2(0, -200), new Vector2(250, 50), () => menuUI.ShowMainMenu());
 
             // Create Level Select Panel
             GameObject levelPanel = CreatePanel("LevelSelectPanel", canvasObj.transform, new Color(0.1f, 0.15f, 0.1f, 1f));
-            CreateText("LevelHeader", "🗺️ Выбор Уровня", levelPanel.transform, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), Vector2.zero, new Vector2(500, 60), 32f);
+            CreateText("LevelHeader", "Выбор Уровня", levelPanel.transform, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), Vector2.zero, new Vector2(500, 60), 32f);
 
             menuUI.levelNameText = CreateText("LevelName", "Название Уровня", levelPanel.transform, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), Vector2.zero, new Vector2(400, 50), 28f);
             menuUI.levelDescriptionText = CreateText("LevelDesc", "Описание уровня...", levelPanel.transform, new Vector2(0.5f, 0.60f), new Vector2(0.5f, 0.60f), Vector2.zero, new Vector2(500, 60), 20f);
@@ -115,7 +128,7 @@ namespace FoodSurvivors.EditorTools
 
             CreateButton("BtnPrevLevel", "< Пред.", levelPanel.transform, new Vector2(-200, 80), new Vector2(100, 50), () => menuUI.PreviousLevel());
             CreateButton("BtnNextLevel", "След. >", levelPanel.transform, new Vector2(200, 80), new Vector2(100, 50), () => menuUI.NextLevel());
-            CreateButton("BtnBackLevel", "◀ Назад в Меню", levelPanel.transform, new Vector2(0, -200), new Vector2(250, 50), () => menuUI.ShowMainMenu());
+            CreateButton("BtnBackLevel", "Назад в Меню", levelPanel.transform, new Vector2(0, -200), new Vector2(250, 50), () => menuUI.ShowMainMenu());
 
             // Link Panels to Menu UI
             menuUI.mainMenuPanel = mainMenuPanel;

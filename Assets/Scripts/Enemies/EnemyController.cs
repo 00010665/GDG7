@@ -134,6 +134,8 @@ namespace FoodSurvivors.Enemies
             float effectiveDamage = Mathf.Max(1f, dmg - armor);
             currentHealth -= effectiveDamage;
 
+            Debug.Log($"[EnemyController] {gameObject.name} took {effectiveDamage} damage (raw: {dmg}, armor: {armor}). HP: {currentHealth}/{maxHealth}");
+
             if (currentHealth <= 0f)
             {
                 currentHealth = 0f;
@@ -170,7 +172,7 @@ namespace FoodSurvivors.Enemies
             Renderer rend = gemObj.GetComponent<Renderer>();
             if (rend != null)
             {
-                rend.material.color = Color.cyan;
+                rend.sharedMaterial = DefaultMaterialsGenerator.GetExpGemMaterial();
             }
 
             Collider col = gemObj.GetComponent<Collider>();

@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 using FoodSurvivors.UI;
+using FoodSurvivors.Weapons;
 
 namespace FoodSurvivors.Player
 {
@@ -25,6 +26,7 @@ namespace FoodSurvivors.Player
         public float hpRegenPerSec = 0f;
 
         private Renderer playerRenderer;
+        private WeaponManager weaponManager;
 
         public Vector2 MoveInput { get; private set; }
         public bool IsWalking => MoveInput.sqrMagnitude > 0.01f;
@@ -33,7 +35,47 @@ namespace FoodSurvivors.Player
         {
             Time.timeScale = 1f;
             playerRenderer = GetComponentInChildren<Renderer>();
+            weaponManager = GetComponent<WeaponManager>();
             InitializeChefStats();
+            ApplyDefaultPlayerMaterial();
+            EnsureStartingWeaponSpawned();
+        }
+
+        private void ApplyDefaultPlayerMaterial()
+        {
+            if (playerRenderer == null) return;
+            // Применяем ярко-голубой материал по умолчанию
+            playerRenderer.sharedMaterial = DefaultMaterialsGenerator.GetPlayerMaterial();
+        }
+
+        private void EnsureStartingWeaponSpawned()
+        {
+            // Если есть WeaponManager, он сам спавнит оружие в Start(),
+            // но в редких случаях ChefData может не иметь startingWeapon,
+            // тогда создаём дефолтное оружие.
+            if (weaponManager == null) return;
+
+            // Немного ждём пока WeaponManager.InitializeStartingWeapon() отработает
+            // Если ничего не заспавнилось, пытаемся создать дефолтное
+            if (weaponManager.activeWeapons == null || weaponManager.activeWeapons.Count == 0)
+            {
+#if UNITY_EDITOR
+                if (chefData == null)
+                {
+                    string[] guids = UnityEditor.AssetDatabase.FindAssets("t:WeaponData");
+                    if (guids.Length > 0)
+                    {
+                        string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                        var defaultWeapon = UnityEditor.AssetDatabase.LoadAssetAtPath<WeaponData>(path);
+                        if (defaultWeapon != null)
+                        {
+                            Debug.LogWarning($"[PlayerController] No starting weapon found. Spawning default: {defaultWeapon.weaponName}");
+                            weaponManager.AddWeapon(defaultWeapon);
+                        }
+                    }
+                }
+#endif
+            }
         }
 
         public void InitializeChefStats()
@@ -62,11 +104,6 @@ namespace FoodSurvivors.Player
                 currentMoveSpeed = chefData.moveSpeed;
                 currentArmor = chefData.armor;
 
-                if (playerRenderer != null)
-                {
-                    playerRenderer.material.color = chefData.chefColor;
-                }
-
                 Debug.Log($"[PlayerController] Initialized as {chefData.chefName} (HP: {currentHealth}, Speed: {currentMoveSpeed}, Armor: {currentArmor})");
             }
             else
@@ -75,8 +112,10 @@ namespace FoodSurvivors.Player
                 currentHealth = maxHealth;
                 currentMoveSpeed = 5f;
                 currentArmor = 0f;
-                Debug.LogWarning("[PlayerController] No ChefData found, initialized with fallback default stats.");
+                Debug.LogWarning("[PlayerController] No ChefData found, initialized with fallback default stats (Diego-style: HP=100, Speed=5, Armor=0).");
             }
+
+            Debug.Log("[PlayerController] Player spawned. WeaponManager will attach starting weapon shortly.");
         }
 
         private void Update()

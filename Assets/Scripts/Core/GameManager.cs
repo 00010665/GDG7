@@ -97,6 +97,7 @@ namespace FoodSurvivors.Core
             }
 
             Debug.Log($"[GameManager] Starting game with Chef: {(selectedChef != null ? selectedChef.chefName : "Default")} and Level: {(selectedLevel != null ? selectedLevel.levelName : "Default")}");
+            Debug.Log("[GameManager] Loading scene 'GameScene'...");
             SceneManager.LoadScene("GameScene");
         }
 

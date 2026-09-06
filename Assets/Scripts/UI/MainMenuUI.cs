@@ -168,10 +168,22 @@ namespace FoodSurvivors.UI
         public void OnClickStartGame()
         {
             PlayButtonSfx();
+            Debug.Log("[MainMenuUI] Clicked 'Start Game' button. Starting game...");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.StartGame();
             }
+            else
+            {
+                Debug.LogError("[MainMenuUI] GameManager.Instance is null! Cannot start game.");
+            }
+        }
+
+        // Псевдоним для OnClick() в кнопке "В БОЙ!"
+        public void OnStartGameButtonClicked()
+        {
+            Debug.Log("[MainMenuUI] Клик кнопки 'В БОЙ!'. Переход в игру...");
+            OnClickStartGame();
         }
 
         public void OnClickQuitGame()

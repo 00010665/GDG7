@@ -71,6 +71,8 @@ namespace FoodSurvivors.Core
 
         private void Collect()
         {
+            Debug.Log($"[ExperienceGem] Collected {xpAmount} XP.");
+
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlaySFX(pickupSound);
@@ -82,7 +84,7 @@ namespace FoodSurvivors.Core
             }
             else
             {
-                Debug.Log($"[ExperienceGem] Collected {xpAmount} XP.");
+                Debug.Log($"[ExperienceGem] Collected {xpAmount} XP. (No ExperienceManager)");
             }
 
             Destroy(gameObject);

@@ -43,7 +43,7 @@ namespace FoodSurvivors.UI
 
             if (titleText != null)
             {
-                titleText.text = isVictory ? "🏆 ПОБЕДА! 🏆" : "💀 ПОРАЖЕНИЕ 💀";
+                titleText.text = isVictory ? "ПОБЕДА!" : "ПОРАЖЕНИЕ";
                 titleText.color = isVictory ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.2f, 0.2f);
             }
 
