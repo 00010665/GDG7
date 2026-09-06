@@ -15,6 +15,7 @@ namespace FoodSurvivors.Player
         public float maxHealth;
         public float currentMoveSpeed;
         public float currentArmor;
+        public float magnetRadius = 3.5f;
 
         private Renderer playerRenderer;
 
@@ -86,10 +87,8 @@ namespace FoodSurvivors.Player
 
             if (moveDirection.sqrMagnitude > 0.01f)
             {
-                // Move position
                 transform.position += moveDirection * (currentMoveSpeed * Time.deltaTime);
 
-                // Rotate towards movement direction smoothly
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection.normalized, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 15f);
             }
@@ -122,7 +121,6 @@ namespace FoodSurvivors.Player
         public void Die()
         {
             Debug.Log("[PlayerController] Player Died!");
-            // Future Game Over handling
         }
     }
 }

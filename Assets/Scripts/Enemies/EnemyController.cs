@@ -1,4 +1,5 @@
 using UnityEngine;
+using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 using FoodSurvivors.Player;
 
@@ -52,7 +53,7 @@ namespace FoodSurvivors.Enemies
                 moveSpeed = 3f;
                 damage = 10f;
                 armor = 0f;
-                xpValue = 1;
+                xpValue = 10;
                 isBoss = false;
             }
 
@@ -135,7 +136,28 @@ namespace FoodSurvivors.Enemies
         public void Die()
         {
             Debug.Log($"[EnemyController] {gameObject.name} (XP: {xpValue}) defeated!");
+            SpawnExperienceGem();
             Destroy(gameObject);
+        }
+
+        private void SpawnExperienceGem()
+        {
+            GameObject gemObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            gemObj.name = "ExperienceGem";
+            gemObj.transform.position = transform.position + Vector3.up * 0.3f;
+            gemObj.transform.localScale = Vector3.one * 0.35f;
+
+            Renderer rend = gemObj.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                rend.material.color = Color.cyan;
+            }
+
+            Collider col = gemObj.GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+
+            ExperienceGem gem = gemObj.AddComponent<ExperienceGem>();
+            gem.Setup(xpValue > 0 ? xpValue : 10);
         }
     }
 }
