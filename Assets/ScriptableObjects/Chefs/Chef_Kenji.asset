@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e74487b729772094f9b02783d97f572a, type: 3}
+  m_Name: Chef_Kenji
+  m_EditorClassIdentifier: Assembly-CSharp::FoodSurvivors.Data.ChefData
+  chefName: "\u041A\u044D\u043D\u0434\u0437\u0438"
+  description: "\u042F\u043F\u043E\u043D\u0441\u043A\u0438\u0439 \u0432\u0438\u0440\u0442\u0443\u043E\u0437
+    \u0441\u0430\u0448\u0438\u043C\u0438. \u041D\u0435\u0432\u0435\u0440\u043E\u044F\u0442\u043D\u043E
+    \u0431\u044B\u0441\u0442\u0440\u044B\u0439 \u0438 \u0441\u0442\u0440\u0435\u043C\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439
+    \u0448\u0435\u0444."
+  chefColor: {r: 0.95, g: 0.95, b: 0.98, a: 1}
+  maxHealth: 90
+  moveSpeed: 6.5
+  armor: 0
+  startingWeapon: {fileID: 11400000, guid: 0856c6a861e6a694ea5662d4d884543c, type: 2}
+  startingPassive: {fileID: 11400000, guid: 8169b2f5b98d58f40b3529727092bcc2, type: 2}

@@ -7,6 +7,7 @@ using UnityEngine.InputSystem.UI;
 using TMPro;
 using FoodSurvivors.Core;
 using FoodSurvivors.UI;
+using FoodSurvivors.Data;
 
 namespace FoodSurvivors.EditorTools
 {
@@ -20,7 +21,25 @@ namespace FoodSurvivors.EditorTools
 
             // 1. GameManager GameObject
             GameObject gmObj = new GameObject("[GameManager]");
-            gmObj.AddComponent<GameManager>();
+            var gmComponent = gmObj.AddComponent<GameManager>();
+
+            // Load all Chefs and Levels into GameManager
+            string[] chefGuids = AssetDatabase.FindAssets("t:ChefData", new[] { "Assets/ScriptableObjects/Chefs" });
+            foreach (var g in chefGuids)
+            {
+                var c = AssetDatabase.LoadAssetAtPath<ChefData>(AssetDatabase.GUIDToAssetPath(g));
+                if (c != null && !gmComponent.availableChefs.Contains(c)) gmComponent.availableChefs.Add(c);
+            }
+
+            string[] levelGuids = AssetDatabase.FindAssets("t:LevelData", new[] { "Assets/ScriptableObjects/Levels" });
+            foreach (var g in levelGuids)
+            {
+                var l = AssetDatabase.LoadAssetAtPath<LevelData>(AssetDatabase.GUIDToAssetPath(g));
+                if (l != null && !gmComponent.availableLevels.Contains(l)) gmComponent.availableLevels.Add(l);
+            }
+
+            if (gmComponent.availableChefs.Count > 0) gmComponent.selectedChef = gmComponent.availableChefs[0];
+            if (gmComponent.availableLevels.Count > 0) gmComponent.selectedLevel = gmComponent.availableLevels[0];
 
             // 2. Canvas & EventSystem
             GameObject canvasObj = new GameObject("Canvas");
@@ -117,7 +136,7 @@ namespace FoodSurvivors.EditorTools
             };
             EditorBuildSettings.scenes = scenes;
 
-            Debug.Log($"[MainMenuBuilder] MainMenuScene saved to {scenePath}");
+            Debug.Log($"[MainMenuBuilder] MainMenuScene with populated Chefs and Levels saved to {scenePath}");
         }
 
         private static GameObject CreatePanel(string name, Transform parent, Color bgColor)

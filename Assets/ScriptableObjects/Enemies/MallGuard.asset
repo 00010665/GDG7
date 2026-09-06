@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91276edb873578b43862f8e5f09682d9, type: 3}
+  m_Name: MallGuard
+  m_EditorClassIdentifier: Assembly-CSharp::FoodSurvivors.Data.EnemyData
+  enemyName: "\u041E\u0445\u0440\u0430\u043D\u043D\u0438\u043A"
+  enemyColor: {r: 0.2, g: 0.35, b: 0.85, a: 1}
+  maxHealth: 90
+  moveSpeed: 2.8
+  damage: 22
+  xpValue: 25
+  armor: 3
+  scale: {x: 1.3, y: 1.3, z: 1.3}
+  isBoss: 0
