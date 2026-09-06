@@ -61,7 +61,14 @@ namespace FoodSurvivors.Weapons
             Debug.Log($"[WeaponManager] Added new weapon: {data.weaponName} (Type: {weaponType.Name})");
         }
 
-        private System.Type GetWeaponType(string weaponName)
+        public int GetWeaponLevel(WeaponData data)
+        {
+            if (data == null) return 0;
+            WeaponBase existing = activeWeapons.Find(w => w.weaponData == data || (w.weaponData != null && w.weaponData.weaponName == data.weaponName));
+            return existing != null ? existing.currentLevel : 0;
+        }
+
+        public System.Type GetWeaponType(string weaponName)
         {
             if (string.IsNullOrEmpty(weaponName)) return typeof(PastaLauncher);
 
@@ -74,6 +81,30 @@ namespace FoodSurvivors.Weapons
             else if (lower.Contains("сальса") || lower.Contains("salsa") || lower.Contains("пятно") || lower.Contains("splash"))
             {
                 return typeof(SalsaSplash);
+            }
+            else if (lower.Contains("суп") || lower.Contains("soup"))
+            {
+                return typeof(SoupBowl);
+            }
+            else if (lower.Contains("суши") || lower.Contains("sushi"))
+            {
+                return typeof(SushiSet);
+            }
+            else if (lower.Contains("тако") || lower.Contains("taco"))
+            {
+                return typeof(TacoThrow);
+            }
+            else if (lower.Contains("пицц") || lower.Contains("pizza") || lower.Contains("cutter"))
+            {
+                return typeof(PizzaCutter);
+            }
+            else if (lower.Contains("чайник") || lower.Contains("кипяток") || lower.Contains("tea"))
+            {
+                return typeof(TeaPot);
+            }
+            else if (lower.Contains("бургер") || lower.Contains("burger"))
+            {
+                return typeof(MegaBurger);
             }
             else
             {

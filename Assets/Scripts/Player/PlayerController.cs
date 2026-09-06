@@ -18,6 +18,12 @@ namespace FoodSurvivors.Player
         public float currentArmor;
         public float magnetRadius = 3.5f;
 
+        [Header("Offensive & Utility Multipliers")]
+        public float damageMultiplier = 1f;
+        public float cooldownReduction = 0f; // e.g. 0.15 = 15% reduction
+        public float areaMultiplier = 1f;
+        public float hpRegenPerSec = 0f;
+
         private Renderer playerRenderer;
 
         private void Start()
@@ -60,6 +66,15 @@ namespace FoodSurvivors.Player
         private void Update()
         {
             HandleMovement();
+            HandleRegeneration();
+        }
+
+        private void HandleRegeneration()
+        {
+            if (hpRegenPerSec > 0f && currentHealth > 0f && currentHealth < maxHealth)
+            {
+                currentHealth = Mathf.Min(maxHealth, currentHealth + hpRegenPerSec * Time.deltaTime);
+            }
         }
 
         private void HandleMovement()

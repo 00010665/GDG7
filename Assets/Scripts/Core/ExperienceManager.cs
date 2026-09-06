@@ -11,6 +11,7 @@ namespace FoodSurvivors.Core
         public int currentLevel = 1;
         public float currentXP = 0f;
         public float xpToNextLevel = 100f;
+        public float xpMultiplier = 1f;
 
         public delegate void OnXPChangedHandler(float current, float max, int level);
         public event OnXPChangedHandler OnXPChanged;
@@ -29,8 +30,9 @@ namespace FoodSurvivors.Core
         {
             if (amount <= 0f) return;
 
-            currentXP += amount;
-            Debug.Log($"[ExperienceManager] +{amount} XP (Progress: {currentXP}/{xpToNextLevel}, Level: {currentLevel})");
+            float modifiedAmount = amount * xpMultiplier;
+            currentXP += modifiedAmount;
+            Debug.Log($"[ExperienceManager] +{modifiedAmount} XP (Base: {amount}, Multiplier: {xpMultiplier}, Progress: {currentXP}/{xpToNextLevel}, Level: {currentLevel})");
 
             OnXPChanged?.Invoke(currentXP, xpToNextLevel, currentLevel);
 

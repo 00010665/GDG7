@@ -48,6 +48,7 @@ namespace FoodSurvivors.EditorTools
 
             playerObj.AddComponent<PlayerController>();
             playerObj.AddComponent<WeaponManager>();
+            playerObj.AddComponent<PassiveManager>();
 
             // 4. WaveManager & ExperienceManager GameObjects
             GameObject waveManagerObj = new GameObject("[WaveManager]");
@@ -188,7 +189,7 @@ namespace FoodSurvivors.EditorTools
             };
             EditorBuildSettings.scenes = scenes;
 
-            Debug.Log($"[GameSceneBuilder] Full GameScene with HUD, LevelUpUI, and GameOverUI saved successfully to {scenePath}");
+            Debug.Log($"[GameSceneBuilder] GameScene saved successfully to {scenePath}");
         }
 
         private static TextMeshProUGUI CreateText(string name, string textStr, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 sizeDelta, float fontSize, TextAlignmentOptions align = TextAlignmentOptions.Center)
