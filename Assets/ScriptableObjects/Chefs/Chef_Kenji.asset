@@ -23,3 +23,6 @@ MonoBehaviour:
   armor: 0
   startingWeapon: {fileID: 11400000, guid: 0856c6a861e6a694ea5662d4d884543c, type: 2}
   startingPassive: {fileID: 11400000, guid: 8169b2f5b98d58f40b3529727092bcc2, type: 2}
+  icon: {fileID: 0}
+  characterSprite: {fileID: 0}
+  animatorController: {fileID: 0}

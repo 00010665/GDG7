@@ -63,3 +63,5 @@ MonoBehaviour:
     areaScale: 1.5
     projectileCount: 4
     duration: 5
+  icon: {fileID: 0}
+  attackSound: {fileID: 0}

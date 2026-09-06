@@ -29,3 +29,5 @@ MonoBehaviour:
     value: 100
   - description: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C 5: +125 \u043A \u0431\u043E\u043D\u0443\u0441\u0443"
     value: 125
+  icon: {fileID: 0}
+  attackSound: {fileID: 0}

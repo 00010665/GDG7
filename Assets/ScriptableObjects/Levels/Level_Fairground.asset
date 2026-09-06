@@ -36,3 +36,5 @@ MonoBehaviour:
     spawnInterval: 3.5
     spawnCountPerTick: 2
   bossData: {fileID: 11400000, guid: b3474a79cc1ad0c46aa5956d3bc32b86, type: 2}
+  backgroundMusic: {fileID: 0}
+  levelBackgroundSprite: {fileID: 0}

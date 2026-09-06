@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
@@ -34,10 +35,53 @@ namespace FoodSurvivors.UI
         private int currentChefIndex = 0;
         private int currentLevelIndex = 0;
 
+        private void Awake()
+        {
+            BindAllButtonsProgrammatically();
+        }
+
         private void Start()
         {
             ShowMainMenu();
             InitSelections();
+        }
+
+        private void BindAllButtonsProgrammatically()
+        {
+            Debug.Log("[MainMenuUI] 🔗 Автоматическое привязывание событий к кнопкам...");
+
+            BindButton("BtnChef", ShowChefSelection);
+            BindButton("BtnLevel", ShowLevelSelection);
+            BindButton("BtnStart", OnClickStartGame);
+            BindButton("BtnQuit", OnClickQuitGame);
+
+            BindButton("BtnBackChef", ShowMainMenu);
+            BindButton("BtnBackLevel", ShowMainMenu);
+
+            BindButton("BtnNextChef", NextChef);
+            BindButton("BtnPrevChef", PreviousChef);
+
+            BindButton("BtnNextLevel", NextLevel);
+            BindButton("BtnPrevLevel", PreviousLevel);
+        }
+
+        private void BindButton(string buttonGameObjectName, UnityEngine.Events.UnityAction action)
+        {
+            GameObject btnObj = GameObject.Find(buttonGameObjectName);
+            if (btnObj != null)
+            {
+                Button btn = btnObj.GetComponent<Button>();
+                if (btn != null)
+                {
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(action);
+                    Debug.Log($"[MainMenuUI] ✅ Успешно привязано действие к кнопке '{buttonGameObjectName}'");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[MainMenuUI] ⚠️ Кнопка '{buttonGameObjectName}' не найдена в иерархии сцены!");
+            }
         }
 
         private void InitSelections()
@@ -62,6 +106,7 @@ namespace FoodSurvivors.UI
 
         public void ShowMainMenu()
         {
+            Debug.Log("[MainMenuUI] 📱 Открытие Главного Меню");
             PlayButtonSfx();
             if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
             if (chefSelectPanel != null) chefSelectPanel.SetActive(false);
@@ -70,6 +115,7 @@ namespace FoodSurvivors.UI
 
         public void ShowChefSelection()
         {
+            Debug.Log("[MainMenuUI] 👨‍🍳 Открытие Панели Выбора Повара");
             PlayButtonSfx();
             if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
             if (chefSelectPanel != null) chefSelectPanel.SetActive(true);
@@ -79,6 +125,7 @@ namespace FoodSurvivors.UI
 
         public void ShowLevelSelection()
         {
+            Debug.Log("[MainMenuUI] 🗺️ Открытие Панели Выбора Уровня");
             PlayButtonSfx();
             if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
             if (chefSelectPanel != null) chefSelectPanel.SetActive(false);
@@ -127,17 +174,7 @@ namespace FoodSurvivors.UI
         public void UpdateChefDisplay()
         {
             ChefData chef = GameManager.Instance != null ? GameManager.Instance.selectedChef : null;
-            if (chef == null)
-            {
-                if (chefNameText != null) chefNameText.text = "Шеф-повар не выбран";
-                if (chefDescriptionText != null) chefDescriptionText.text = "-";
-                if (chefHpText != null) chefHpText.text = "ХП: -";
-                if (chefSpeedText != null) chefSpeedText.text = "Скорость: -";
-                if (chefArmorText != null) chefArmorText.text = "Броня: -";
-                if (chefWeaponText != null) chefWeaponText.text = "Оружие: -";
-                if (chefPassiveText != null) chefPassiveText.text = "Пассивка: -";
-                return;
-            }
+            if (chef == null) return;
 
             if (chefNameText != null) chefNameText.text = chef.chefName;
             if (chefDescriptionText != null) chefDescriptionText.text = chef.description;
@@ -152,13 +189,7 @@ namespace FoodSurvivors.UI
         public void UpdateLevelDisplay()
         {
             LevelData level = GameManager.Instance != null ? GameManager.Instance.selectedLevel : null;
-            if (level == null)
-            {
-                if (levelNameText != null) levelNameText.text = "Уровень не выбран";
-                if (levelDescriptionText != null) levelDescriptionText.text = "-";
-                if (levelDurationText != null) levelDurationText.text = "Длительность: -";
-                return;
-            }
+            if (level == null) return;
 
             if (levelNameText != null) levelNameText.text = level.levelName;
             if (levelDescriptionText != null) levelDescriptionText.text = level.description;
@@ -168,30 +199,39 @@ namespace FoodSurvivors.UI
         public void OnClickStartGame()
         {
             PlayButtonSfx();
-            Debug.Log("[MainMenuUI] Clicked 'Start Game' button. Starting game...");
+            Debug.Log("[MainMenuUI] ⚔️ НАЖАТА КНОПКА 'В БОЙ!' -> Переход в GameScene...");
+
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.StartGame();
             }
             else
             {
-                Debug.LogError("[MainMenuUI] GameManager.Instance is null! Cannot start game.");
+                Debug.LogWarning("[MainMenuUI] GameManager.Instance равен NULL! Загрузка сцены 'GameScene' напрямую");
+                SceneManager.LoadScene("GameScene");
             }
         }
 
-        // Псевдоним для OnClick() в кнопке "В БОЙ!"
+        // Алиас для вызова из MainMenuBuilder
         public void OnStartGameButtonClicked()
         {
-            Debug.Log("[MainMenuUI] Клик кнопки 'В БОЙ!'. Переход в игру...");
             OnClickStartGame();
         }
 
         public void OnClickQuitGame()
         {
             PlayButtonSfx();
+            Debug.Log("[MainMenuUI] 🚪 НАЖАТА КНОПКА 'ВЫХОД'");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.QuitGame();
+            }
+            else
+            {
+                Application.Quit();
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#endif
             }
         }
 

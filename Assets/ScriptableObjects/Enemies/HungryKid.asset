@@ -21,3 +21,6 @@ MonoBehaviour:
   armor: 0
   scale: {x: 0.7, y: 0.7, z: 0.7}
   isBoss: 0
+  enemySprite: {fileID: 0}
+  animatorController: {fileID: 0}
+  deathSound: {fileID: 0}
