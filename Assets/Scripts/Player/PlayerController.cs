@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
+using FoodSurvivors.UI;
 
 namespace FoodSurvivors.Player
 {
@@ -121,6 +122,10 @@ namespace FoodSurvivors.Player
         public void Die()
         {
             Debug.Log("[PlayerController] Player Died!");
+            if (GameOverUI.Instance != null)
+            {
+                GameOverUI.Instance.ShowGameOver(false);
+            }
         }
     }
 }

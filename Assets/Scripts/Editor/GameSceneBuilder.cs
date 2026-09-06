@@ -70,7 +70,7 @@ namespace FoodSurvivors.EditorTools
             camFollow.offset = new Vector3(0f, 12f, -8f);
             camFollow.smoothSpeed = 8f;
 
-            // 6. In-Game Canvas & LevelUp UI
+            // 6. In-Game Canvas & EventSystem
             GameObject canvasObj = new GameObject("Canvas");
             Canvas canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -81,11 +81,31 @@ namespace FoodSurvivors.EditorTools
             esObj.AddComponent<EventSystem>();
             esObj.AddComponent<InputSystemUIInputModule>();
 
+            // --- GameHUD Setup ---
+            GameObject hudObj = new GameObject("GameHUDManager");
+            hudObj.transform.SetParent(canvasObj.transform, false);
+            GameHUD gameHUD = hudObj.AddComponent<GameHUD>();
+
+            // XP Bar (Top of Screen)
+            GameObject xpBarObj = CreateSlider("XPBar", canvasObj.transform, new Vector2(0.5f, 0.96f), new Vector2(0.5f, 0.96f), Vector2.zero, new Vector2(800, 20), new Color(0.1f, 0.1f, 0.1f, 0.8f), new Color(0f, 0.8f, 1f, 1f));
+            gameHUD.xpSlider = xpBarObj.GetComponent<Slider>();
+
+            // Level Text (Top Right)
+            gameHUD.levelText = CreateText("LevelText", "УР. 1", canvasObj.transform, new Vector2(0.92f, 0.96f), new Vector2(0.92f, 0.96f), Vector2.zero, new Vector2(150, 40), 22f, TextAlignmentOptions.Right);
+
+            // Timer Text (Top Center)
+            gameHUD.timerText = CreateText("TimerText", "00:00", canvasObj.transform, new Vector2(0.5f, 0.91f), new Vector2(0.5f, 0.91f), Vector2.zero, new Vector2(200, 40), 28f, TextAlignmentOptions.Center);
+
+            // HP Bar (Bottom Left)
+            GameObject hpBarObj = CreateSlider("HPBar", canvasObj.transform, new Vector2(0.18f, 0.05f), new Vector2(0.18f, 0.05f), Vector2.zero, new Vector2(250, 25), new Color(0.2f, 0.05f, 0.05f, 0.8f), new Color(0.9f, 0.1f, 0.1f, 1f));
+            gameHUD.hpSlider = hpBarObj.GetComponent<Slider>();
+            gameHUD.hpText = CreateText("HPText", "HP: 100 / 100", hpBarObj.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, 16f, TextAlignmentOptions.Center);
+
+            // --- LevelUp UI Setup ---
             GameObject levelUpManagerObj = new GameObject("LevelUpUIManager");
             levelUpManagerObj.transform.SetParent(canvasObj.transform, false);
             LevelUpUI levelUpUI = levelUpManagerObj.AddComponent<LevelUpUI>();
 
-            // LevelUp Panel
             GameObject levelUpPanel = new GameObject("LevelUpPanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             levelUpPanel.transform.SetParent(canvasObj.transform, false);
             RectTransform panelRt = levelUpPanel.GetComponent<RectTransform>();
@@ -95,20 +115,8 @@ namespace FoodSurvivors.EditorTools
             levelUpPanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.85f);
             levelUpUI.levelUpPanel = levelUpPanel;
 
-            // Title
-            GameObject titleObj = new GameObject("LevelUpTitle", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            titleObj.transform.SetParent(levelUpPanel.transform, false);
-            RectTransform titleRt = titleObj.GetComponent<RectTransform>();
-            titleRt.anchorMin = new Vector2(0.5f, 0.85f);
-            titleRt.anchorMax = new Vector2(0.5f, 0.85f);
-            titleRt.sizeDelta = new Vector2(600, 80);
-            TextMeshProUGUI titleTmp = titleObj.GetComponent<TextMeshProUGUI>();
-            titleTmp.text = "⚡ НОВЫЙ УРОВЕНЬ! ⚡";
-            titleTmp.fontSize = 38f;
-            titleTmp.alignment = TextAlignmentOptions.Center;
-            titleTmp.color = Color.yellow;
+            CreateText("LevelUpTitle", "⚡ НОВЫЙ УРОВЕНЬ! ⚡", levelUpPanel.transform, new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), Vector2.zero, new Vector2(600, 80), 38f, TextAlignmentOptions.Center);
 
-            // Cards setup
             levelUpUI.cardButtons = new Button[3];
             levelUpUI.cardTitleTexts = new TextMeshProUGUI[3];
             levelUpUI.cardDescTexts = new TextMeshProUGUI[3];
@@ -131,7 +139,6 @@ namespace FoodSurvivors.EditorTools
                 cardImg.color = new Color(0.2f, 0.2f, 0.25f, 0.95f);
                 levelUpUI.cardButtons[i] = cardObj.GetComponent<Button>();
 
-                // Card Preview Image
                 GameObject cardPrv = new GameObject("Preview", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
                 cardPrv.transform.SetParent(cardObj.transform, false);
                 RectTransform prvRt = cardPrv.GetComponent<RectTransform>();
@@ -140,47 +147,35 @@ namespace FoodSurvivors.EditorTools
                 prvRt.sizeDelta = new Vector2(60, 60);
                 levelUpUI.cardColorPreviews[i] = cardPrv.GetComponent<Image>();
 
-                // Type Text
-                GameObject typeObj = new GameObject("Type", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-                typeObj.transform.SetParent(cardObj.transform, false);
-                RectTransform typeRt = typeObj.GetComponent<RectTransform>();
-                typeRt.anchorMin = new Vector2(0.5f, 0.58f);
-                typeRt.anchorMax = new Vector2(0.5f, 0.58f);
-                typeRt.sizeDelta = new Vector2(200, 30);
-                TextMeshProUGUI typeTmp = typeObj.GetComponent<TextMeshProUGUI>();
-                typeTmp.fontSize = 16f;
-                typeTmp.alignment = TextAlignmentOptions.Center;
-                typeTmp.color = Color.cyan;
-                levelUpUI.cardTypeTexts[i] = typeTmp;
-
-                // Title Text
-                GameObject cardTitleObj = new GameObject("Title", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-                cardTitleObj.transform.SetParent(cardObj.transform, false);
-                RectTransform cardTitleRt = cardTitleObj.GetComponent<RectTransform>();
-                cardTitleRt.anchorMin = new Vector2(0.5f, 0.45f);
-                cardTitleRt.anchorMax = new Vector2(0.5f, 0.45f);
-                cardTitleRt.sizeDelta = new Vector2(210, 40);
-                TextMeshProUGUI cardTitleTmp = cardTitleObj.GetComponent<TextMeshProUGUI>();
-                cardTitleTmp.fontSize = 20f;
-                cardTitleTmp.alignment = TextAlignmentOptions.Center;
-                cardTitleTmp.color = Color.white;
-                levelUpUI.cardTitleTexts[i] = cardTitleTmp;
-
-                // Desc Text
-                GameObject descObj = new GameObject("Desc", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-                descObj.transform.SetParent(cardObj.transform, false);
-                RectTransform descRt = descObj.GetComponent<RectTransform>();
-                descRt.anchorMin = new Vector2(0.5f, 0.22f);
-                descRt.anchorMax = new Vector2(0.5f, 0.22f);
-                descRt.sizeDelta = new Vector2(200, 90);
-                TextMeshProUGUI descTmp = descObj.GetComponent<TextMeshProUGUI>();
-                descTmp.fontSize = 15f;
-                descTmp.alignment = TextAlignmentOptions.Center;
-                descTmp.color = new Color(0.85f, 0.85f, 0.85f);
-                levelUpUI.cardDescTexts[i] = descTmp;
+                levelUpUI.cardTypeTexts[i] = CreateText("Type", "[Блюдо]", cardObj.transform, new Vector2(0.5f, 0.58f), new Vector2(0.5f, 0.58f), Vector2.zero, new Vector2(200, 30), 16f, TextAlignmentOptions.Center);
+                levelUpUI.cardTitleTexts[i] = CreateText("Title", "Название", cardObj.transform, new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), Vector2.zero, new Vector2(210, 40), 20f, TextAlignmentOptions.Center);
+                levelUpUI.cardDescTexts[i] = CreateText("Desc", "Описание улучшения...", cardObj.transform, new Vector2(0.5f, 0.22f), new Vector2(0.5f, 0.22f), Vector2.zero, new Vector2(200, 90), 15f, TextAlignmentOptions.Center);
             }
 
             levelUpPanel.SetActive(false);
+
+            // --- GameOver UI Setup ---
+            GameObject gameOverManagerObj = new GameObject("GameOverUIManager");
+            gameOverManagerObj.transform.SetParent(canvasObj.transform, false);
+            GameOverUI gameOverUI = gameOverManagerObj.AddComponent<GameOverUI>();
+
+            GameObject gameOverPanel = new GameObject("GameOverPanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            gameOverPanel.transform.SetParent(canvasObj.transform, false);
+            RectTransform goPanelRt = gameOverPanel.GetComponent<RectTransform>();
+            goPanelRt.anchorMin = Vector2.zero;
+            goPanelRt.anchorMax = Vector2.one;
+            goPanelRt.sizeDelta = Vector2.zero;
+            gameOverPanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.05f, 0.92f);
+            gameOverUI.gameOverPanel = gameOverPanel;
+
+            gameOverUI.titleText = CreateText("GameOverTitle", "💀 ПОРАЖЕНИЕ 💀", gameOverPanel.transform, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), Vector2.zero, new Vector2(600, 80), 44f, TextAlignmentOptions.Center);
+            gameOverUI.statsText = CreateText("GameOverStats", "Время в бою: 00:00\nДостигнутый уровень: 1", gameOverPanel.transform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), Vector2.zero, new Vector2(500, 100), 24f, TextAlignmentOptions.Center);
+
+            CreateButton("BtnRestart", "🔄 Играть Заново", gameOverPanel.transform, new Vector2(0, -20), new Vector2(280, 55), () => gameOverUI.OnClickRestart());
+            CreateButton("BtnMainMenu", "🏠 Главное Меню", gameOverPanel.transform, new Vector2(0, -90), new Vector2(280, 50), () => gameOverUI.OnClickMainMenu());
+            CreateButton("BtnQuit", "❌ Выход", gameOverPanel.transform, new Vector2(0, -155), new Vector2(280, 45), () => gameOverUI.OnClickQuit());
+
+            gameOverPanel.SetActive(false);
 
             // Save Scene
             string scenePath = "Assets/Scenes/GameScene.unity";
@@ -193,7 +188,84 @@ namespace FoodSurvivors.EditorTools
             };
             EditorBuildSettings.scenes = scenes;
 
-            Debug.Log($"[GameSceneBuilder] GameScene with LevelUpUI saved successfully to {scenePath}");
+            Debug.Log($"[GameSceneBuilder] Full GameScene with HUD, LevelUpUI, and GameOverUI saved successfully to {scenePath}");
+        }
+
+        private static TextMeshProUGUI CreateText(string name, string textStr, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 sizeDelta, float fontSize, TextAlignmentOptions align = TextAlignmentOptions.Center)
+        {
+            GameObject txtObj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            txtObj.transform.SetParent(parent, false);
+            RectTransform rt = txtObj.GetComponent<RectTransform>();
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = sizeDelta;
+
+            TextMeshProUGUI tmp = txtObj.GetComponent<TextMeshProUGUI>();
+            tmp.text = textStr;
+            tmp.fontSize = fontSize;
+            tmp.alignment = align;
+            tmp.color = Color.white;
+            return tmp;
+        }
+
+        private static GameObject CreateSlider(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 sizeDelta, Color bgColor, Color fillColor)
+        {
+            GameObject sliderObj = new GameObject(name, typeof(RectTransform), typeof(Slider));
+            sliderObj.transform.SetParent(parent, false);
+            RectTransform rt = sliderObj.GetComponent<RectTransform>();
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.anchoredPosition = anchoredPos;
+            rt.sizeDelta = sizeDelta;
+
+            Slider slider = sliderObj.GetComponent<Slider>();
+
+            GameObject bgObj = new GameObject("Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            bgObj.transform.SetParent(sliderObj.transform, false);
+            RectTransform bgRt = bgObj.GetComponent<RectTransform>();
+            bgRt.anchorMin = Vector2.zero;
+            bgRt.anchorMax = Vector2.one;
+            bgRt.sizeDelta = Vector2.zero;
+            bgObj.GetComponent<Image>().color = bgColor;
+
+            GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
+            fillArea.transform.SetParent(sliderObj.transform, false);
+            RectTransform faRt = fillArea.GetComponent<RectTransform>();
+            faRt.anchorMin = Vector2.zero;
+            faRt.anchorMax = Vector2.one;
+            faRt.sizeDelta = Vector2.zero;
+
+            GameObject fillObj = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            fillObj.transform.SetParent(fillArea.transform, false);
+            RectTransform fillRt = fillObj.GetComponent<RectTransform>();
+            fillRt.anchorMin = Vector2.zero;
+            fillRt.anchorMax = Vector2.one;
+            fillRt.sizeDelta = Vector2.zero;
+            fillObj.GetComponent<Image>().color = fillColor;
+
+            slider.fillRect = fillRt;
+            slider.targetGraphic = bgObj.GetComponent<Image>();
+
+            return sliderObj;
+        }
+
+        private static Button CreateButton(string name, string label, Transform parent, Vector2 anchoredPos, Vector2 sizeDelta, UnityEngine.Events.UnityAction onClick)
+        {
+            GameObject btnObj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            btnObj.transform.SetParent(parent, false);
+            RectTransform rt = btnObj.GetComponent<RectTransform>();
+            rt.sizeDelta = sizeDelta;
+            rt.anchoredPosition = anchoredPos;
+
+            Image img = btnObj.GetComponent<Image>();
+            img.color = new Color(0.25f, 0.25f, 0.3f, 1f);
+
+            Button btn = btnObj.GetComponent<Button>();
+            if (onClick != null) btn.onClick.AddListener(onClick);
+
+            CreateText("Text", label, btnObj.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, 18f);
+            return btn;
         }
     }
 }

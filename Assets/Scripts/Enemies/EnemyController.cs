@@ -2,6 +2,7 @@ using UnityEngine;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 using FoodSurvivors.Player;
+using FoodSurvivors.UI;
 
 namespace FoodSurvivors.Enemies
 {
@@ -137,6 +138,12 @@ namespace FoodSurvivors.Enemies
         {
             Debug.Log($"[EnemyController] {gameObject.name} (XP: {xpValue}) defeated!");
             SpawnExperienceGem();
+
+            if (isBoss && GameOverUI.Instance != null)
+            {
+                GameOverUI.Instance.ShowGameOver(true);
+            }
+
             Destroy(gameObject);
         }
 
