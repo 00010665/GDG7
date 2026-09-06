@@ -47,6 +47,7 @@ namespace FoodSurvivors.EditorTools
             playerObj.transform.position = new Vector3(0f, 1f, 0f);
 
             playerObj.AddComponent<PlayerController>();
+            playerObj.AddComponent<PlayerVisuals>();
             playerObj.AddComponent<WeaponManager>();
             playerObj.AddComponent<PassiveManager>();
 

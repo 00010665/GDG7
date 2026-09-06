@@ -1,4 +1,5 @@
 using UnityEngine;
+using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 using FoodSurvivors.Player;
 
@@ -84,11 +85,22 @@ namespace FoodSurvivors.Weapons
             if (cooldownTimer <= 0f)
             {
                 Attack();
+
                 WeaponLevelData stats = GetCurrentLevelData();
                 cooldownTimer = Mathf.Max(0.1f, GetCooldown(stats.cooldown));
             }
         }
 
-        protected abstract void Attack();
+        protected void Attack()
+        {
+            if (AudioManager.Instance != null && weaponData != null)
+            {
+                AudioManager.Instance.PlaySFX(weaponData.attackSound);
+            }
+
+            PerformAttack();
+        }
+
+        protected abstract void PerformAttack();
     }
 }

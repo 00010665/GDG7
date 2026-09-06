@@ -6,7 +6,7 @@ namespace FoodSurvivors.Weapons
 {
     public class SalsaSplash : WeaponBase
     {
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
             Vector3 spawnPos = new Vector3(transform.position.x, 0.02f, transform.position.z);

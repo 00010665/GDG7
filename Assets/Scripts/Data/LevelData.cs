@@ -22,5 +22,9 @@ namespace FoodSurvivors.Data
         public float levelDuration = 300f;
         public List<WaveData> waves = new List<WaveData>();
         public EnemyData bossData;
+
+        [Header("Media Assets")]
+        public AudioClip backgroundMusic;
+        public Sprite levelBackgroundSprite;
     }
 }

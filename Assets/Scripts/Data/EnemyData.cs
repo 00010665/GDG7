@@ -14,5 +14,10 @@ namespace FoodSurvivors.Data
         public float armor = 0f;
         public Vector3 scale = Vector3.one;
         public bool isBoss = false;
+
+        [Header("Media Assets")]
+        public Sprite enemySprite;
+        public RuntimeAnimatorController animatorController;
+        public AudioClip deathSound;
     }
 }

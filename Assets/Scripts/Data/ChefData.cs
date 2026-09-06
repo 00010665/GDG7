@@ -13,5 +13,10 @@ namespace FoodSurvivors.Data
         public float armor = 0f;
         public WeaponData startingWeapon;
         public PassiveData startingPassive;
+
+        [Header("Visual & Animation Assets")]
+        public Sprite icon;
+        public Sprite characterSprite;
+        public RuntimeAnimatorController animatorController;
     }
 }

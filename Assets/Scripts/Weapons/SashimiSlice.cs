@@ -9,7 +9,7 @@ namespace FoodSurvivors.Weapons
         private List<GameObject> activeBlades = new List<GameObject>();
         private float currentAngle = 0f;
 
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             RefreshBlades();
         }

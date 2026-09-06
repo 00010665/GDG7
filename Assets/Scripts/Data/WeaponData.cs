@@ -24,5 +24,9 @@ namespace FoodSurvivors.Data
         public Color weaponColor = Color.red;
         public GameObject weaponPrefab;
         public List<WeaponLevelData> levels = new List<WeaponLevelData>();
+
+        [Header("Media Assets")]
+        public Sprite icon;
+        public AudioClip attackSound;
     }
 }

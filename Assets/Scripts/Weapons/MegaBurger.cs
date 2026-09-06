@@ -5,7 +5,7 @@ namespace FoodSurvivors.Weapons
 {
     public class MegaBurger : WeaponBase
     {
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
             Vector3 targetPos = FindDropTarget(10f * GetArea(stats.areaScale));

@@ -5,7 +5,7 @@ namespace FoodSurvivors.Weapons
 {
     public class PastaLauncher : WeaponBase
     {
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
             Transform nearestEnemy = FindNearestEnemy();

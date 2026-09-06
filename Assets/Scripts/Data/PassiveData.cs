@@ -31,5 +31,9 @@ namespace FoodSurvivors.Data
         public PassiveType passiveType;
         public Color passiveColor = Color.white;
         public List<PassiveLevelData> levels = new List<PassiveLevelData>();
+
+        [Header("Media Assets")]
+        public Sprite icon;
+        public AudioClip attackSound;
     }
 }

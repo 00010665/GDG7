@@ -6,7 +6,7 @@ namespace FoodSurvivors.Weapons
 {
     public class TacoThrow : WeaponBase
     {
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
             Transform target = FindNearestEnemy(transform.position, null);

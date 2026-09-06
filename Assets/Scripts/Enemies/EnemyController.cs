@@ -59,6 +59,13 @@ namespace FoodSurvivors.Enemies
             }
 
             FindPlayer();
+
+            EnemyVisuals visuals = GetComponent<EnemyVisuals>();
+            if (visuals == null)
+            {
+                visuals = gameObject.AddComponent<EnemyVisuals>();
+            }
+            visuals.ApplyEnemyVisuals(enemyData);
         }
 
         private void Start()
@@ -137,6 +144,12 @@ namespace FoodSurvivors.Enemies
         public void Die()
         {
             Debug.Log($"[EnemyController] {gameObject.name} (XP: {xpValue}) defeated!");
+
+            if (AudioManager.Instance != null && enemyData != null)
+            {
+                AudioManager.Instance.PlaySFX(enemyData.deathSound);
+            }
+
             SpawnExperienceGem();
 
             if (isBoss && GameOverUI.Instance != null)

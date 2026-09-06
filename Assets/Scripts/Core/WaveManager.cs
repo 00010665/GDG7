@@ -41,6 +41,11 @@ namespace FoodSurvivors.Core
 #endif
 
             InitWaveTimers();
+
+            if (AudioManager.Instance != null && currentLevelData != null)
+            {
+                AudioManager.Instance.PlayBGM(currentLevelData.backgroundMusic);
+            }
         }
 
         private void FindPlayer()
@@ -157,7 +162,9 @@ namespace FoodSurvivors.Core
             }
 
             EnemyController enemyCtrl = enemyObj.AddComponent<EnemyController>();
+            EnemyVisuals visuals = enemyObj.AddComponent<EnemyVisuals>();
             enemyCtrl.Initialize(enemyData);
+            visuals.ApplyEnemyVisuals(enemyData);
 
             return enemyObj;
         }

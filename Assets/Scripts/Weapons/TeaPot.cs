@@ -8,7 +8,7 @@ namespace FoodSurvivors.Weapons
     {
         private GameObject currentStream;
 
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
 

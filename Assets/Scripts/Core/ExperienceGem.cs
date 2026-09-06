@@ -7,6 +7,7 @@ namespace FoodSurvivors.Core
     {
         public int xpAmount = 10;
         public float magnetSpeed = 12f;
+        public AudioClip pickupSound;
 
         private Transform playerTransform;
         private PlayerController playerController;
@@ -70,6 +71,11 @@ namespace FoodSurvivors.Core
 
         private void Collect()
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySFX(pickupSound);
+            }
+
             if (ExperienceManager.Instance != null)
             {
                 ExperienceManager.Instance.AddXP(xpAmount);

@@ -5,7 +5,7 @@ namespace FoodSurvivors.Weapons
 {
     public class SoupBowl : WeaponBase
     {
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
             int count = Mathf.Max(1, stats.projectileCount);

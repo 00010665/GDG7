@@ -26,6 +26,9 @@ namespace FoodSurvivors.Player
 
         private Renderer playerRenderer;
 
+        public Vector2 MoveInput { get; private set; }
+        public bool IsWalking => MoveInput.sqrMagnitude > 0.01f;
+
         private void Start()
         {
             Time.timeScale = 1f;
@@ -112,6 +115,7 @@ namespace FoodSurvivors.Player
             }
 
             input = Vector2.ClampMagnitude(input, 1f);
+            MoveInput = input;
             Vector3 moveDirection = new Vector3(input.x, 0f, input.y);
 
             if (moveDirection.sqrMagnitude > 0.01f)

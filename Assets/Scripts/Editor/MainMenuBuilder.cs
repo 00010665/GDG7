@@ -23,6 +23,9 @@ namespace FoodSurvivors.EditorTools
             GameObject gmObj = new GameObject("[GameManager]");
             var gmComponent = gmObj.AddComponent<GameManager>();
 
+            GameObject audioObj = new GameObject("[AudioManager]");
+            audioObj.AddComponent<AudioManager>();
+
             // Load all Chefs and Levels into GameManager
             string[] chefGuids = AssetDatabase.FindAssets("t:ChefData", new[] { "Assets/ScriptableObjects/Chefs" });
             foreach (var g in chefGuids)

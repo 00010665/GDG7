@@ -5,7 +5,7 @@ namespace FoodSurvivors.Weapons
 {
     public class SushiSet : WeaponBase
     {
-        protected override void Attack()
+        protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
 

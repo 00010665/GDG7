@@ -28,6 +28,9 @@ namespace FoodSurvivors.UI
         public TextMeshProUGUI levelDescriptionText;
         public TextMeshProUGUI levelDurationText;
 
+        [Header("UI Click Sound")]
+        public AudioClip uiClickSound;
+
         private int currentChefIndex = 0;
         private int currentLevelIndex = 0;
 
@@ -59,6 +62,7 @@ namespace FoodSurvivors.UI
 
         public void ShowMainMenu()
         {
+            PlayButtonSfx();
             if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
             if (chefSelectPanel != null) chefSelectPanel.SetActive(false);
             if (levelSelectPanel != null) levelSelectPanel.SetActive(false);
@@ -66,6 +70,7 @@ namespace FoodSurvivors.UI
 
         public void ShowChefSelection()
         {
+            PlayButtonSfx();
             if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
             if (chefSelectPanel != null) chefSelectPanel.SetActive(true);
             if (levelSelectPanel != null) levelSelectPanel.SetActive(false);
@@ -74,6 +79,7 @@ namespace FoodSurvivors.UI
 
         public void ShowLevelSelection()
         {
+            PlayButtonSfx();
             if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
             if (chefSelectPanel != null) chefSelectPanel.SetActive(false);
             if (levelSelectPanel != null) levelSelectPanel.SetActive(true);
@@ -82,6 +88,7 @@ namespace FoodSurvivors.UI
 
         public void NextChef()
         {
+            PlayButtonSfx();
             if (GameManager.Instance == null || GameManager.Instance.availableChefs == null || GameManager.Instance.availableChefs.Count == 0) return;
             currentChefIndex = (currentChefIndex + 1) % GameManager.Instance.availableChefs.Count;
             GameManager.Instance.SelectChef(GameManager.Instance.availableChefs[currentChefIndex]);
@@ -90,6 +97,7 @@ namespace FoodSurvivors.UI
 
         public void PreviousChef()
         {
+            PlayButtonSfx();
             if (GameManager.Instance == null || GameManager.Instance.availableChefs == null || GameManager.Instance.availableChefs.Count == 0) return;
             currentChefIndex--;
             if (currentChefIndex < 0) currentChefIndex = GameManager.Instance.availableChefs.Count - 1;
@@ -99,6 +107,7 @@ namespace FoodSurvivors.UI
 
         public void NextLevel()
         {
+            PlayButtonSfx();
             if (GameManager.Instance == null || GameManager.Instance.availableLevels == null || GameManager.Instance.availableLevels.Count == 0) return;
             currentLevelIndex = (currentLevelIndex + 1) % GameManager.Instance.availableLevels.Count;
             GameManager.Instance.SelectLevel(GameManager.Instance.availableLevels[currentLevelIndex]);
@@ -107,6 +116,7 @@ namespace FoodSurvivors.UI
 
         public void PreviousLevel()
         {
+            PlayButtonSfx();
             if (GameManager.Instance == null || GameManager.Instance.availableLevels == null || GameManager.Instance.availableLevels.Count == 0) return;
             currentLevelIndex--;
             if (currentLevelIndex < 0) currentLevelIndex = GameManager.Instance.availableLevels.Count - 1;
@@ -157,6 +167,7 @@ namespace FoodSurvivors.UI
 
         public void OnClickStartGame()
         {
+            PlayButtonSfx();
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.StartGame();
@@ -165,9 +176,18 @@ namespace FoodSurvivors.UI
 
         public void OnClickQuitGame()
         {
+            PlayButtonSfx();
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.QuitGame();
+            }
+        }
+
+        private void PlayButtonSfx()
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySFX(uiClickSound);
             }
         }
     }
