@@ -20,12 +20,25 @@ namespace FoodSurvivors.Core
 
         private void Start()
         {
+            Time.timeScale = 1f;
             FindPlayer();
 
-            if (GameManager.Instance != null && GameManager.Instance.selectedLevel != null)
+            if (currentLevelData == null && GameManager.Instance != null && GameManager.Instance.selectedLevel != null)
             {
                 currentLevelData = GameManager.Instance.selectedLevel;
             }
+
+#if UNITY_EDITOR
+            if (currentLevelData == null)
+            {
+                string[] guids = UnityEditor.AssetDatabase.FindAssets("t:LevelData");
+                if (guids.Length > 0)
+                {
+                    string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                    currentLevelData = UnityEditor.AssetDatabase.LoadAssetAtPath<LevelData>(path);
+                }
+            }
+#endif
 
             InitWaveTimers();
         }

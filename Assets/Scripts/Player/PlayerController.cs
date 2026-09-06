@@ -20,7 +20,7 @@ namespace FoodSurvivors.Player
 
         [Header("Offensive & Utility Multipliers")]
         public float damageMultiplier = 1f;
-        public float cooldownReduction = 0f; // e.g. 0.15 = 15% reduction
+        public float cooldownReduction = 0f;
         public float areaMultiplier = 1f;
         public float hpRegenPerSec = 0f;
 
@@ -28,6 +28,7 @@ namespace FoodSurvivors.Player
 
         private void Start()
         {
+            Time.timeScale = 1f;
             playerRenderer = GetComponentInChildren<Renderer>();
             InitializeChefStats();
         }
@@ -38,6 +39,18 @@ namespace FoodSurvivors.Player
             {
                 chefData = GameManager.Instance.selectedChef;
             }
+
+#if UNITY_EDITOR
+            if (chefData == null)
+            {
+                string[] guids = UnityEditor.AssetDatabase.FindAssets("t:ChefData");
+                if (guids.Length > 0)
+                {
+                    string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
+                    chefData = UnityEditor.AssetDatabase.LoadAssetAtPath<ChefData>(path);
+                }
+            }
+#endif
 
             if (chefData != null)
             {
