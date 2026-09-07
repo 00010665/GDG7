@@ -13,6 +13,10 @@ namespace FoodSurvivors.Core
         public float xpToNextLevel = 100f;
         public float xpMultiplier = 1f;
 
+        [Header("Match Statistics")]
+        public float totalXpCollected = 0f;
+        public int enemiesKilledCount = 0;
+
         public delegate void OnXPChangedHandler(float current, float max, int level);
         public event OnXPChangedHandler OnXPChanged;
 
@@ -26,13 +30,30 @@ namespace FoodSurvivors.Core
             Instance = this;
         }
 
+        private void Start()
+        {
+            ResetStats();
+        }
+
+        public void ResetStats()
+        {
+            currentLevel = 1;
+            currentXP = 0f;
+            xpToNextLevel = 100f;
+            xpMultiplier = 1f;
+            totalXpCollected = 0f;
+            enemiesKilledCount = 0;
+        }
+
         public void AddXP(float amount)
         {
             if (amount <= 0f) return;
 
             float modifiedAmount = amount * xpMultiplier;
             currentXP += modifiedAmount;
-            Debug.Log($"[ExperienceManager] +{modifiedAmount} XP (Base: {amount}, Multiplier: {xpMultiplier}, Progress: {currentXP}/{xpToNextLevel}, Level: {currentLevel})");
+            totalXpCollected += modifiedAmount;
+
+            Debug.Log($"[ExperienceManager] +{modifiedAmount} XP (Всего опыта: {totalXpCollected:F0})");
 
             OnXPChanged?.Invoke(currentXP, xpToNextLevel, currentLevel);
 
@@ -48,7 +69,7 @@ namespace FoodSurvivors.Core
             currentLevel++;
             xpToNextLevel = Mathf.Round(xpToNextLevel * 1.25f);
 
-            Debug.Log($"[ExperienceManager] LEVEL UP! Reached Level {currentLevel}! Next XP: {xpToNextLevel}");
+            Debug.Log($"[ExperienceManager] LEVEL UP! Достигнут уровень {currentLevel}!");
 
             OnXPChanged?.Invoke(currentXP, xpToNextLevel, currentLevel);
 
@@ -60,7 +81,6 @@ namespace FoodSurvivors.Core
             }
             else
             {
-                Debug.LogWarning("[ExperienceManager] LevelUpUI Instance not found! Auto-unpausing.");
                 Time.timeScale = 1f;
             }
         }

@@ -201,7 +201,7 @@ namespace FoodSurvivors.EditorTools
             gameOverUI.gameOverPanel = gameOverPanel;
 
             gameOverUI.titleText = CreateText("GameOverTitle", "ПОРАЖЕНИЕ", gameOverPanel.transform, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), Vector2.zero, new Vector2(600, 80), 44f, TextAlignmentOptions.Center);
-            gameOverUI.statsText = CreateText("GameOverStats", "Время в бою: 00:00\nДостигнутый уровень: 1", gameOverPanel.transform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), Vector2.zero, new Vector2(500, 100), 24f, TextAlignmentOptions.Center);
+            gameOverUI.statsText = CreateText("GameOverStats", "Итоговый отчет боя...", gameOverPanel.transform, new Vector2(0.5f, 0.52f), new Vector2(0.5f, 0.52f), Vector2.zero, new Vector2(580, 240), 18f, TextAlignmentOptions.Center);
 
             CreateButton("BtnRestart", "Играть Заново", gameOverPanel.transform, new Vector2(0, -20), new Vector2(280, 55), () => gameOverUI.OnClickRestart());
             CreateButton("BtnMainMenu", "Главное Меню", gameOverPanel.transform, new Vector2(0, -90), new Vector2(280, 50), () => gameOverUI.OnClickMainMenu());

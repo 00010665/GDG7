@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using FoodSurvivors.Core;
+using FoodSurvivors.Player;
+using FoodSurvivors.Weapons;
 
 namespace FoodSurvivors.UI
 {
@@ -38,9 +41,6 @@ namespace FoodSurvivors.UI
         {
             if (gameOverPanel == null) return;
 
-            Debug.Log("[GameOverUI] 🔗 Привязывание кнопок экрана Поражения/Победы...");
-
-            // Ищем кнопки внутри панели даже если она скрыта (SetActive(false))
             BindButtonInPanel("BtnRestart", OnClickRestart);
             BindButtonInPanel("BtnMainMenu", OnClickMainMenu);
             BindButtonInPanel("BtnQuit", OnClickQuit);
@@ -50,7 +50,6 @@ namespace FoodSurvivors.UI
         {
             if (gameOverPanel == null) return;
 
-            // transform.Find ищет скрытых детей
             Transform btnTr = gameOverPanel.transform.Find(btnName);
             if (btnTr != null)
             {
@@ -59,12 +58,10 @@ namespace FoodSurvivors.UI
                 {
                     btn.onClick.RemoveAllListeners();
                     btn.onClick.AddListener(action);
-                    Debug.Log($"[GameOverUI] ✅ Успешно привязано действие к кнопке '{btnName}'");
                 }
             }
             else
             {
-                // Резервный поиск по всем дочерним кнопкам
                 Button[] buttons = gameOverPanel.GetComponentsInChildren<Button>(true);
                 foreach (var b in buttons)
                 {
@@ -72,7 +69,6 @@ namespace FoodSurvivors.UI
                     {
                         b.onClick.RemoveAllListeners();
                         b.onClick.AddListener(action);
-                        Debug.Log($"[GameOverUI] ✅ Найдена скрытая кнопка через GetComponentsInChildren: '{btnName}'");
                         break;
                     }
                 }
@@ -86,15 +82,13 @@ namespace FoodSurvivors.UI
                 gameOverPanel.SetActive(true);
             }
 
-            // Повторно привязываем события при открытии для надежности
             BindButtonsProgrammatically();
-
             Time.timeScale = 0f;
 
             if (titleText != null)
             {
-                titleText.text = isVictory ? "ПОБЕДА!" : "ПОРАЖЕНИЕ";
-                titleText.color = isVictory ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.2f, 0.2f);
+                titleText.text = isVictory ? "🏆 ПОБЕДА! 🏆" : "💀 ПОРАЖЕНИЕ 💀";
+                titleText.color = isVictory ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.25f, 0.25f);
             }
 
             if (statsText != null)
@@ -105,24 +99,66 @@ namespace FoodSurvivors.UI
                 int secs = Mathf.FloorToInt(elapsed % 60f);
 
                 int level = ExperienceManager.Instance != null ? ExperienceManager.Instance.currentLevel : 1;
+                int kills = ExperienceManager.Instance != null ? ExperienceManager.Instance.enemiesKilledCount : 0;
+                int totalXp = ExperienceManager.Instance != null ? Mathf.RoundToInt(ExperienceManager.Instance.totalXpCollected) : 0;
 
-                statsText.text = $"Время в бою: {mins:00}:{secs:00}\nДостигнутый уровень: {level}";
+                // Сбор списка активных Блюд
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                WeaponManager wmPlayer = playerObj != null ? playerObj.GetComponent<WeaponManager>() : null;
+                PassiveManager pmPlayer = playerObj != null ? playerObj.GetComponent<PassiveManager>() : null;
+
+                string weaponsList = "Нет";
+                if (wmPlayer != null && wmPlayer.activeWeapons != null && wmPlayer.activeWeapons.Count > 0)
+                {
+                    List<string> wNames = new List<string>();
+                    foreach (var w in wmPlayer.activeWeapons)
+                    {
+                        if (w != null && w.weaponData != null)
+                            wNames.Add($"{w.weaponData.weaponName} (Ур. {w.currentLevel})");
+                    }
+                    if (wNames.Count > 0) weaponsList = string.Join(", ", wNames);
+                }
+
+                // Сбор списка активных Пассивок
+                string passivesList = "Нет";
+                if (pmPlayer != null && pmPlayer.activePassives != null && pmPlayer.activePassives.Count > 0)
+                {
+                    List<string> pNames = new List<string>();
+                    foreach (var p in pmPlayer.activePassives)
+                    {
+                        if (p != null)
+                        {
+                            int lvl = pmPlayer.GetPassiveLevel(p);
+                            pNames.Add($"{p.passiveName} (Ур. {lvl})");
+                        }
+                    }
+                    if (pNames.Count > 0) passivesList = string.Join(", ", pNames);
+                }
+
+                // Формируем детальный финансово-кулинарный отчет
+                statsText.text = $"<b>⏱️ Время в бою:</b> {mins:00}:{secs:00}\n" +
+                                 $"<b>🏆 Уровень повара:</b> {level}\n" +
+                                 $"<b>👾 Накормлено туристов:</b> {kills}\n" +
+                                 $"<b>💰 Собранные чаевые (XP):</b> {totalXp}\n\n" +
+                                 $"<b>🍲 Экипированные блюда:</b>\n<color=#FFFF88>{weaponsList}</color>\n\n" +
+                                 $"<b>🧂 Активные таланты:</b>\n<color=#88FFFF>{passivesList}</color>";
             }
 
-            Debug.Log($"[GameOverUI] Игра завершена! Победа: {isVictory}");
+            Debug.Log($"[GameOverUI] Матч окончен! Итоговый отчет сгенерирован.");
         }
 
         public void OnClickRestart()
         {
             Time.timeScale = 1f;
-            Debug.Log("[GameOverUI] 🔄 Нажата кнопка 'Играть Заново'");
+            if (ExperienceManager.Instance != null) ExperienceManager.Instance.ResetStats();
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
         public void OnClickMainMenu()
         {
             Time.timeScale = 1f;
-            Debug.Log("[GameOverUI] 🏠 Нажата кнопка 'Главное Меню'");
+            if (ExperienceManager.Instance != null) ExperienceManager.Instance.ResetStats();
+
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.ReturnToMenu();
@@ -135,7 +171,6 @@ namespace FoodSurvivors.UI
 
         public void OnClickQuit()
         {
-            Debug.Log("[GameOverUI] 🚪 Нажата кнопка 'Выход'");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.QuitGame();

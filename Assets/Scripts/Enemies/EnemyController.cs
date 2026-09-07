@@ -147,6 +147,11 @@ namespace FoodSurvivors.Enemies
         {
             Debug.Log($"[EnemyController] {gameObject.name} (XP: {xpValue}) defeated!");
 
+            if (ExperienceManager.Instance != null)
+            {
+                ExperienceManager.Instance.enemiesKilledCount++;
+            }
+
             if (AudioManager.Instance != null && enemyData != null)
             {
                 AudioManager.Instance.PlaySFX(enemyData.deathSound);
