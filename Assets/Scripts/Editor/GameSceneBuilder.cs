@@ -19,33 +19,31 @@ namespace FoodSurvivors.EditorTools
         {
             var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            // 1. Directional Light
+            // 1. Light
             GameObject lightObj = new GameObject("Directional Light");
             Light lightComponent = lightObj.AddComponent<Light>();
             lightComponent.type = LightType.Directional;
             lightComponent.intensity = 1.2f;
             lightObj.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
-            // 2. Ground Plane Arena (зелёный шахматный пол)
+            // 2. Ground Arena
             GameObject planeObj = GameObject.CreatePrimitive(PrimitiveType.Plane);
             planeObj.name = "ArenaGround";
             planeObj.transform.position = Vector3.zero;
-            planeObj.transform.localScale = new Vector3(10f, 1f, 10f); // 100x100 units
+            planeObj.transform.localScale = new Vector3(10f, 1f, 10f);
 
             Renderer planeRenderer = planeObj.GetComponent<Renderer>();
             if (planeRenderer != null)
             {
-                // Используем DefaultMaterialsGenerator для получения яркого зелёного шахматного материала
                 planeRenderer.sharedMaterial = DefaultMaterialsGenerator.GetArenaCheckerboardMaterial();
             }
 
-            // Дополнительный скрипт GridGroundSetup, если существует
             if (planeObj.GetComponent<GridGroundSetup>() == null)
             {
                 planeObj.AddComponent<GridGroundSetup>();
             }
 
-            // 3. Player GameObject (3D Capsule)
+            // 3. Player
             GameObject playerObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             playerObj.name = "Player";
             playerObj.tag = "Player";
@@ -56,21 +54,23 @@ namespace FoodSurvivors.EditorTools
             playerObj.AddComponent<WeaponManager>();
             playerObj.AddComponent<PassiveManager>();
 
-            // Применяем ярко-голубой материал игрока
             Renderer playerRend = playerObj.GetComponent<Renderer>();
             if (playerRend != null)
             {
                 playerRend.sharedMaterial = DefaultMaterialsGenerator.GetPlayerMaterial();
             }
 
-            // 4. WaveManager & ExperienceManager GameObjects
+            // 4. Managers
             GameObject waveManagerObj = new GameObject("[WaveManager]");
             waveManagerObj.AddComponent<WaveManager>();
 
             GameObject expManagerObj = new GameObject("[ExperienceManager]");
             expManagerObj.AddComponent<ExperienceManager>();
 
-            // 5. Main Camera
+            GameObject cheatMenuObj = new GameObject("[CheatMenu]");
+            cheatMenuObj.AddComponent<CheatMenu>();
+
+            // 5. Camera
             GameObject camObj = new GameObject("Main Camera");
             camObj.tag = "MainCamera";
             Camera cam = camObj.AddComponent<Camera>();
@@ -84,7 +84,7 @@ namespace FoodSurvivors.EditorTools
             camFollow.offset = new Vector3(0f, 12f, -8f);
             camFollow.smoothSpeed = 8f;
 
-            // 6. In-Game Canvas & EventSystem
+            // 6. Canvas & EventSystem
             GameObject canvasObj = new GameObject("Canvas");
             Canvas canvas = canvasObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -95,27 +95,22 @@ namespace FoodSurvivors.EditorTools
             esObj.AddComponent<EventSystem>();
             esObj.AddComponent<InputSystemUIInputModule>();
 
-            // --- GameHUD Setup ---
+            // --- GameHUD ---
             GameObject hudObj = new GameObject("GameHUDManager");
             hudObj.transform.SetParent(canvasObj.transform, false);
             GameHUD gameHUD = hudObj.AddComponent<GameHUD>();
 
-            // XP Bar (Top of Screen)
             GameObject xpBarObj = CreateSlider("XPBar", canvasObj.transform, new Vector2(0.5f, 0.96f), new Vector2(0.5f, 0.96f), Vector2.zero, new Vector2(800, 20), new Color(0.1f, 0.1f, 0.1f, 0.8f), new Color(0f, 0.8f, 1f, 1f));
             gameHUD.xpSlider = xpBarObj.GetComponent<Slider>();
 
-            // Level Text (Top Right)
             gameHUD.levelText = CreateText("LevelText", "УР. 1", canvasObj.transform, new Vector2(0.92f, 0.96f), new Vector2(0.92f, 0.96f), Vector2.zero, new Vector2(150, 40), 22f, TextAlignmentOptions.Right);
-
-            // Timer Text (Top Center)
             gameHUD.timerText = CreateText("TimerText", "00:00", canvasObj.transform, new Vector2(0.5f, 0.91f), new Vector2(0.5f, 0.91f), Vector2.zero, new Vector2(200, 40), 28f, TextAlignmentOptions.Center);
 
-            // HP Bar (Bottom Left)
             GameObject hpBarObj = CreateSlider("HPBar", canvasObj.transform, new Vector2(0.18f, 0.05f), new Vector2(0.18f, 0.05f), Vector2.zero, new Vector2(250, 25), new Color(0.2f, 0.05f, 0.05f, 0.8f), new Color(0.9f, 0.1f, 0.1f, 1f));
             gameHUD.hpSlider = hpBarObj.GetComponent<Slider>();
             gameHUD.hpText = CreateText("HPText", "HP: 100 / 100", hpBarObj.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, 16f, TextAlignmentOptions.Center);
 
-            // --- LevelUp UI Setup ---
+            // --- LevelUp UI ---
             GameObject levelUpManagerObj = new GameObject("LevelUpUIManager");
             levelUpManagerObj.transform.SetParent(canvasObj.transform, false);
             LevelUpUI levelUpUI = levelUpManagerObj.AddComponent<LevelUpUI>();
@@ -168,7 +163,30 @@ namespace FoodSurvivors.EditorTools
 
             levelUpPanel.SetActive(false);
 
-            // --- GameOver UI Setup ---
+            // --- Pause Menu UI ---
+            GameObject pauseManagerObj = new GameObject("PauseMenuManager");
+            pauseManagerObj.transform.SetParent(canvasObj.transform, false);
+            PauseMenuUI pauseUI = pauseManagerObj.AddComponent<PauseMenuUI>();
+
+            GameObject pausePanel = new GameObject("PausePanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            pausePanel.transform.SetParent(canvasObj.transform, false);
+            RectTransform pausePanelRt = pausePanel.GetComponent<RectTransform>();
+            pausePanelRt.anchorMin = Vector2.zero;
+            pausePanelRt.anchorMax = Vector2.one;
+            pausePanelRt.sizeDelta = Vector2.zero;
+            pausePanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.1f, 0.88f);
+            pauseUI.pausePanel = pausePanel;
+
+            CreateText("PauseTitle", "ПАУЗА", pausePanel.transform, new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f), Vector2.zero, new Vector2(600, 80), 44f, TextAlignmentOptions.Center);
+            pauseUI.statsText = CreateText("PauseStats", "Статистика повара...", pausePanel.transform, new Vector2(0.5f, 0.58f), new Vector2(0.5f, 0.58f), Vector2.zero, new Vector2(500, 160), 20f, TextAlignmentOptions.Center);
+
+            CreateButton("BtnResume", "Продолжить", pausePanel.transform, new Vector2(0, -20), new Vector2(280, 55), () => pauseUI.ResumeGame());
+            CreateButton("BtnRestartPause", "Играть Заново", pausePanel.transform, new Vector2(0, -90), new Vector2(280, 50), () => pauseUI.OnClickRestart());
+            CreateButton("BtnMainMenuPause", "Главное Меню", pausePanel.transform, new Vector2(0, -155), new Vector2(280, 45), () => pauseUI.OnClickMainMenu());
+
+            pausePanel.SetActive(false);
+
+            // --- GameOver UI ---
             GameObject gameOverManagerObj = new GameObject("GameOverUIManager");
             gameOverManagerObj.transform.SetParent(canvasObj.transform, false);
             GameOverUI gameOverUI = gameOverManagerObj.AddComponent<GameOverUI>();
@@ -182,7 +200,7 @@ namespace FoodSurvivors.EditorTools
             gameOverPanel.GetComponent<Image>().color = new Color(0.05f, 0.05f, 0.05f, 0.92f);
             gameOverUI.gameOverPanel = gameOverPanel;
 
-            gameOverUI.titleText = CreateText("GameOverTitle", "💀 ПОРАЖЕНИЕ 💀", gameOverPanel.transform, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), Vector2.zero, new Vector2(600, 80), 44f, TextAlignmentOptions.Center);
+            gameOverUI.titleText = CreateText("GameOverTitle", "ПОРАЖЕНИЕ", gameOverPanel.transform, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), Vector2.zero, new Vector2(600, 80), 44f, TextAlignmentOptions.Center);
             gameOverUI.statsText = CreateText("GameOverStats", "Время в бою: 00:00\nДостигнутый уровень: 1", gameOverPanel.transform, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), Vector2.zero, new Vector2(500, 100), 24f, TextAlignmentOptions.Center);
 
             CreateButton("BtnRestart", "Играть Заново", gameOverPanel.transform, new Vector2(0, -20), new Vector2(280, 55), () => gameOverUI.OnClickRestart());
@@ -195,14 +213,13 @@ namespace FoodSurvivors.EditorTools
             string scenePath = "Assets/Scenes/GameScene.unity";
             EditorSceneManager.SaveScene(newScene, scenePath);
 
-            // Ensure Build Settings include GameScene
             var scenes = new EditorBuildSettingsScene[] {
                 new EditorBuildSettingsScene("Assets/Scenes/MainMenuScene.unity", true),
                 new EditorBuildSettingsScene("Assets/Scenes/GameScene.unity", true)
             };
             EditorBuildSettings.scenes = scenes;
 
-            Debug.Log($"[GameSceneBuilder] GameScene saved successfully to {scenePath}");
+            Debug.Log($"[GameSceneBuilder] GameScene built with PauseMenuUI saved to {scenePath}");
         }
 
         private static TextMeshProUGUI CreateText(string name, string textStr, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 sizeDelta, float fontSize, TextAlignmentOptions align = TextAlignmentOptions.Center)

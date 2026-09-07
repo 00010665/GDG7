@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using FoodSurvivors.Core;
@@ -30,6 +31,52 @@ namespace FoodSurvivors.UI
             {
                 gameOverPanel.SetActive(false);
             }
+            BindButtonsProgrammatically();
+        }
+
+        private void BindButtonsProgrammatically()
+        {
+            if (gameOverPanel == null) return;
+
+            Debug.Log("[GameOverUI] 🔗 Привязывание кнопок экрана Поражения/Победы...");
+
+            // Ищем кнопки внутри панели даже если она скрыта (SetActive(false))
+            BindButtonInPanel("BtnRestart", OnClickRestart);
+            BindButtonInPanel("BtnMainMenu", OnClickMainMenu);
+            BindButtonInPanel("BtnQuit", OnClickQuit);
+        }
+
+        private void BindButtonInPanel(string btnName, UnityEngine.Events.UnityAction action)
+        {
+            if (gameOverPanel == null) return;
+
+            // transform.Find ищет скрытых детей
+            Transform btnTr = gameOverPanel.transform.Find(btnName);
+            if (btnTr != null)
+            {
+                Button btn = btnTr.GetComponent<Button>();
+                if (btn != null)
+                {
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener(action);
+                    Debug.Log($"[GameOverUI] ✅ Успешно привязано действие к кнопке '{btnName}'");
+                }
+            }
+            else
+            {
+                // Резервный поиск по всем дочерним кнопкам
+                Button[] buttons = gameOverPanel.GetComponentsInChildren<Button>(true);
+                foreach (var b in buttons)
+                {
+                    if (b.gameObject.name == btnName)
+                    {
+                        b.onClick.RemoveAllListeners();
+                        b.onClick.AddListener(action);
+                        Debug.Log($"[GameOverUI] ✅ Найдена скрытая кнопка через GetComponentsInChildren: '{btnName}'");
+                        break;
+                    }
+                }
+            }
         }
 
         public void ShowGameOver(bool isVictory)
@@ -38,6 +85,9 @@ namespace FoodSurvivors.UI
             {
                 gameOverPanel.SetActive(true);
             }
+
+            // Повторно привязываем события при открытии для надежности
+            BindButtonsProgrammatically();
 
             Time.timeScale = 0f;
 
@@ -59,18 +109,20 @@ namespace FoodSurvivors.UI
                 statsText.text = $"Время в бою: {mins:00}:{secs:00}\nДостигнутый уровень: {level}";
             }
 
-            Debug.Log($"[GameOverUI] Game Ended! Victory: {isVictory}");
+            Debug.Log($"[GameOverUI] Игра завершена! Победа: {isVictory}");
         }
 
         public void OnClickRestart()
         {
             Time.timeScale = 1f;
+            Debug.Log("[GameOverUI] 🔄 Нажата кнопка 'Играть Заново'");
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
         public void OnClickMainMenu()
         {
             Time.timeScale = 1f;
+            Debug.Log("[GameOverUI] 🏠 Нажата кнопка 'Главное Меню'");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.ReturnToMenu();
@@ -83,6 +135,7 @@ namespace FoodSurvivors.UI
 
         public void OnClickQuit()
         {
+            Debug.Log("[GameOverUI] 🚪 Нажата кнопка 'Выход'");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.QuitGame();
@@ -90,6 +143,9 @@ namespace FoodSurvivors.UI
             else
             {
                 Application.Quit();
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#endif
             }
         }
     }
