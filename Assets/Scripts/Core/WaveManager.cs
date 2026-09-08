@@ -50,6 +50,12 @@ namespace FoodSurvivors.Core
                 currentLevelData = CreateDefaultLevel1();
             }
 
+            GridGroundSetup grid = Object.FindFirstObjectByType<GridGroundSetup>();
+            if (grid != null)
+            {
+                grid.UpdateColorsForLevel(currentLevelData);
+            }
+
             InitWaveTimers();
 
             if (AudioManager.Instance != null && currentLevelData != null && currentLevelData.backgroundMusic != null)

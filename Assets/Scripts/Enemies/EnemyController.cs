@@ -134,6 +134,11 @@ namespace FoodSurvivors.Enemies
             float effectiveDamage = Mathf.Max(1f, dmg - armor);
             currentHealth -= effectiveDamage;
 
+            // Вспышка красного цвета при получении урона
+            DamageFlash flasher = GetComponent<DamageFlash>();
+            if (flasher == null) flasher = gameObject.AddComponent<DamageFlash>();
+            flasher.CallFlash();
+
             Debug.Log($"[EnemyController] {gameObject.name} took {effectiveDamage} damage (raw: {dmg}, armor: {armor}). HP: {currentHealth}/{maxHealth}");
 
             if (currentHealth <= 0f)

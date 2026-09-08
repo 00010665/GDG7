@@ -20,6 +20,11 @@ namespace FoodSurvivors.Data
         public string levelName;
         [TextArea] public string description;
         public float levelDuration = 300f;
+
+        [Header("Ground Theme Colors (Optional)")]
+        public Color groundColorPrimary = Color.clear;
+        public Color groundColorSecondary = Color.clear;
+
         public List<WaveData> waves = new List<WaveData>();
         public EnemyData bossData;
 
