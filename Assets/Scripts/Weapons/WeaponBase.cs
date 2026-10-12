@@ -61,7 +61,15 @@ namespace FoodSurvivors.Weapons
         public float GetDamage(float baseDmg)
         {
             float mult = player != null ? player.damageMultiplier : 1f;
-            return baseDmg * mult;
+            float calculatedDamage = baseDmg * mult;
+
+            // Добавляем целочисленный бонус стамины (например, +5 к урону)
+            if (player != null && player.Stamina != null)
+            {
+                calculatedDamage += player.Stamina.GetFlatDamageBonus();
+            }
+
+            return calculatedDamage;
         }
 
         public float GetCooldown(float baseCooldown)

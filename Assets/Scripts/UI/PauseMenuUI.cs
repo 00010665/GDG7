@@ -151,7 +151,7 @@ namespace FoodSurvivors.UI
 
             if (pc != null)
             {
-                stats += $"<b>ХП:</b> {Mathf.CeilToInt(pc.currentHealth)} / {Mathf.CeilToInt(pc.maxHealth)}\n" +
+                stats += //$"<b>ХП:</b> {Mathf.CeilToInt(pc.currentHealth)} / {Mathf.CeilToInt(pc.maxHealth)}\n" +
                          $"<b>Скорость:</b> {pc.currentMoveSpeed:F1}\n" +
                          $"<b>Броня:</b> {pc.currentArmor}\n" +
                          $"<b>Множитель урона:</b> +{Mathf.RoundToInt((pc.damageMultiplier - 1f) * 100)}%";

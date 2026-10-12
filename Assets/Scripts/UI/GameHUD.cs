@@ -15,8 +15,8 @@ namespace FoodSurvivors.UI
         public Slider xpSlider;
         public TextMeshProUGUI levelText;
 
-        [Header("HP HUD")]
-        public Slider hpSlider;
+        [Header("Stamina HUD (Бывшее HP)")]
+        public Slider hpSlider; // Используется как слайдер стамины
         public TextMeshProUGUI hpText;
 
         [Header("Timer HUD")]
@@ -29,7 +29,6 @@ namespace FoodSurvivors.UI
         private PlayerController playerController;
         private WaveManager waveManager;
 
-        // Кэш созданных UI слотов
         private List<GameObject> weaponSlotUIList = new List<GameObject>();
         private List<GameObject> passiveSlotUIList = new List<GameObject>();
 
@@ -37,13 +36,19 @@ namespace FoodSurvivors.UI
         {
             EnsureContainersExist();
             FindReferences();
+
+            // Перекрашиваем нижнюю полоску в желто-зеленый цвет стамины
+            if (hpSlider != null && hpSlider.fillRect != null)
+            {
+                Image fill = hpSlider.fillRect.GetComponent<Image>();
+                if (fill != null) fill.color = new Color(0.2f, 0.85f, 0.3f);
+            }
         }
 
         private void EnsureContainersExist()
         {
             Transform parentCanvas = transform.parent != null ? transform.parent : transform;
 
-            // Контейнер для блюд (Верхний левый угол под XP)
             if (weaponIconsContainer == null)
             {
                 GameObject wContObj = new GameObject("WeaponSlotsContainer", typeof(RectTransform));
@@ -57,7 +62,6 @@ namespace FoodSurvivors.UI
                 weaponIconsContainer = wContObj.transform;
             }
 
-            // Контейнер для пассивок (Чуть ниже блюд)
             if (passiveIconsContainer == null)
             {
                 GameObject pContObj = new GameObject("PassiveSlotsContainer", typeof(RectTransform));
@@ -91,7 +95,7 @@ namespace FoodSurvivors.UI
             }
 
             UpdateXPHUD();
-            UpdateHPHUD();
+            UpdateStaminaHUD();
             UpdateTimerHUD();
             UpdateEquippedItemsHUD();
         }
@@ -116,22 +120,23 @@ namespace FoodSurvivors.UI
             }
         }
 
-        private void UpdateHPHUD()
+        private void UpdateStaminaHUD()
         {
-            if (playerController == null) return;
+            if (playerController == null || playerController.Stamina == null) return;
 
-            float curHP = playerController.currentHealth;
-            float maxHP = playerController.maxHealth;
+            StaminaSystem st = playerController.Stamina;
 
             if (hpSlider != null)
             {
-                hpSlider.maxValue = maxHP;
-                hpSlider.value = curHP;
+                hpSlider.maxValue = st.maxStamina;
+                hpSlider.value = st.currentStamina;
             }
 
             if (hpText != null)
             {
-                hpText.text = $"HP: {Mathf.CeilToInt(curHP)} / {Mathf.CeilToInt(maxHP)}";
+                int dmgBonus = st.GetFlatDamageBonus();
+                string modeNote = st.currentMode == StaminaMode.DashOnly ? "" : $" (+{dmgBonus} к урону)";
+                hpText.text = $"СТАМИНА: {Mathf.CeilToInt(st.currentStamina)} / {Mathf.CeilToInt(st.maxStamina)}{modeNote}";
             }
         }
 
@@ -154,13 +159,11 @@ namespace FoodSurvivors.UI
             WeaponManager wm = playerController.GetComponent<WeaponManager>();
             PassiveManager pm = playerController.GetComponent<PassiveManager>();
 
-            // Обновление иконок Блюд
             if (wm != null && weaponIconsContainer != null)
             {
                 UpdateWeaponsSlots(wm.activeWeapons);
             }
 
-            // Обновление иконок Пассивок
             if (pm != null && passiveIconsContainer != null)
             {
                 UpdatePassivesSlots(pm);
@@ -171,7 +174,6 @@ namespace FoodSurvivors.UI
         {
             if (weapons == null) return;
 
-            // Очищаем лишние слоты при уменьшении количества
             while (weaponSlotUIList.Count > weapons.Count)
             {
                 int last = weaponSlotUIList.Count - 1;
@@ -179,7 +181,6 @@ namespace FoodSurvivors.UI
                 weaponSlotUIList.RemoveAt(last);
             }
 
-            // Создаем или обновляем слоты
             for (int i = 0; i < weapons.Count; i++)
             {
                 WeaponBase w = weapons[i];
@@ -241,7 +242,6 @@ namespace FoodSurvivors.UI
             Image bg = slotObj.GetComponent<Image>();
             bg.color = new Color(0.12f, 0.12f, 0.18f, 0.85f);
 
-            // Квадратный цветовой индикатор предмета
             GameObject colorBox = new GameObject("ColorPreview", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             colorBox.transform.SetParent(slotObj.transform, false);
             RectTransform boxRt = colorBox.GetComponent<RectTransform>();
@@ -251,7 +251,6 @@ namespace FoodSurvivors.UI
             boxRt.anchoredPosition = new Vector2(3f, 0f);
             boxRt.sizeDelta = new Vector2(20f, 20f);
 
-            // Текст названия и уровня
             GameObject txtObj = new GameObject("SlotText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             txtObj.transform.SetParent(slotObj.transform, false);
             RectTransform txtRt = txtObj.GetComponent<RectTransform>();

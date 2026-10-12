@@ -129,10 +129,13 @@ namespace FoodSurvivors.Player
                     break;
 
                 case PassiveType.HealthBonus:
-                    float hpAdd = val > 0 ? val : 25f;
-                    playerController.maxHealth += hpAdd;
-                    playerController.Heal(hpAdd);
-                    playerController.hpRegenPerSec += 1.5f;
+                    float staminaAdd = val > 0 ? val : 25f;
+                    if (playerController.Stamina != null)
+                    {
+                        playerController.Stamina.maxStamina += staminaAdd;
+                        playerController.Stamina.currentStamina += staminaAdd;
+                        playerController.Stamina.staminaRegenPerSec += 2.5f;
+                    }
                     break;
 
                 case PassiveType.MagnetBonus:
@@ -147,7 +150,7 @@ namespace FoodSurvivors.Player
                     else if (pName.Contains("перец") || pName.Contains("area")) { playerController.areaMultiplier += 0.15f; playerController.damageMultiplier += 0.05f; }
                     else if (pName.Contains("подача") || pName.Contains("cooldown")) playerController.cooldownReduction = Mathf.Min(0.70f, playerController.cooldownReduction + 0.08f);
                     else if (pName.Contains("чаевые") || pName.Contains("xp")) { if (ExperienceManager.Instance != null) ExperienceManager.Instance.xpMultiplier += 0.20f; }
-                    else if (pName.Contains("ингредиенты") || pName.Contains("health")) { playerController.maxHealth += 25f; playerController.Heal(25f); playerController.hpRegenPerSec += 1.5f; }
+                    else if (pName.Contains("ингредиенты") || pName.Contains("health")) if (playerController.Stamina != null){ playerController.Stamina.maxStamina += 25f; playerController.Stamina.currentStamina += 25f; playerController.Stamina.staminaRegenPerSec += 2.5f;}
                     else if (pName.Contains("фартук") || pName.Contains("magnet")) playerController.magnetRadius += 1.5f;
                     break;
             }
