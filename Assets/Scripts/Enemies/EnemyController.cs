@@ -182,7 +182,7 @@ namespace FoodSurvivors.Enemies
             }
         }
 
-        public void TakeDamage(float dmg)
+        public void TakeDamage(float dmg, bool isFromBoss = false)
         {
             float effectiveDamage = Mathf.Max(1f, dmg - armor);
             currentHealth -= effectiveDamage;
@@ -194,29 +194,30 @@ namespace FoodSurvivors.Enemies
             if (currentHealth <= 0f)
             {
                 currentHealth = 0f;
-                Die();
+                Die(isFromBoss);
             }
         }
 
-        public void Die()
+        public void TakeDamage(float dmg)
         {
-            if (ExperienceManager.Instance != null)
+            TakeDamage(dmg, false);
+        }
+
+        public void Die(bool isFromBoss = false)
+        {
+            // Зачисляем очко победителю
+            if (CompetitionManager.Instance != null)
+            {
+                if (isFromBoss) CompetitionManager.Instance.AddBossScore(1);
+                else CompetitionManager.Instance.AddPlayerScore(1);
+            }
+
+            if (ExperienceManager.Instance != null && !isFromBoss)
             {
                 ExperienceManager.Instance.enemiesKilledCount++;
             }
 
-            if (AudioManager.Instance != null && enemyData != null)
-            {
-                AudioManager.Instance.PlaySFX(enemyData.deathSound);
-            }
-
             SpawnExperienceGem();
-
-            if (isBoss && GameOverUI.Instance != null)
-            {
-                GameOverUI.Instance.ShowGameOver(true);
-            }
-
             Destroy(gameObject);
         }
 

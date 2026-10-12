@@ -86,22 +86,13 @@ namespace FoodSurvivors.UI
 
         private void InitSelections()
         {
-            if (GameManager.Instance == null) return;
-
-            if (GameManager.Instance.availableChefs != null && GameManager.Instance.availableChefs.Count > 0)
-            {
-                currentChefIndex = 0;
-                GameManager.Instance.SelectChef(GameManager.Instance.availableChefs[currentChefIndex]);
-            }
-
             if (GameManager.Instance.availableLevels != null && GameManager.Instance.availableLevels.Count > 0)
             {
-                currentLevelIndex = 0;
+                // Ищем и фиксируем карту "Бульвар"
+                int boulevardIndex = GameManager.Instance.availableLevels.FindIndex(l => l != null && l.levelName.Contains("Бульвар"));
+                currentLevelIndex = boulevardIndex >= 0 ? boulevardIndex : 0;
                 GameManager.Instance.SelectLevel(GameManager.Instance.availableLevels[currentLevelIndex]);
             }
-
-            UpdateChefDisplay();
-            UpdateLevelDisplay();
         }
 
         public void ShowMainMenu()

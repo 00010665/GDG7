@@ -142,13 +142,20 @@ namespace FoodSurvivors.UI
 
         private void UpdateTimerHUD()
         {
-            float elapsedSeconds = waveManager != null ? waveManager.gameTimer : Time.timeSinceLevelLoad;
-            int minutes = Mathf.FloorToInt(elapsedSeconds / 60f);
-            int seconds = Mathf.FloorToInt(elapsedSeconds % 60f);
-
-            if (timerText != null)
+            if (CompetitionManager.Instance != null)
             {
-                timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+                float remaining = CompetitionManager.Instance.RemainingTime;
+                int mins = Mathf.FloorToInt(remaining / 60f);
+                int secs = Mathf.FloorToInt(remaining % 60f);
+
+                int pScore = CompetitionManager.Instance.playerScore;
+                int bScore = CompetitionManager.Instance.bossScore;
+
+                if (timerText != null)
+                {
+                    string phaseLabel = CompetitionManager.Instance.isBossPhase ? "<color=red>КУЛИНАРНЫЙ БАТЛ!</color>\n" : "";
+                    timerText.text = $"{phaseLabel}⏳ {mins:00}:{secs:00}\n<b><color=cyan>ВЫ: {pScore}</color>   VS   <color=magenta>БОСС: {bScore}</color></b>";
+                }
             }
         }
 
