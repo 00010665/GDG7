@@ -1,8 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using FoodSurvivors.Boss;
-using FoodSurvivors.Data;
 using FoodSurvivors.Player;
 using FoodSurvivors.UI;
 
@@ -10,11 +8,30 @@ namespace FoodSurvivors.Core
 {
     public class CompetitionManager : MonoBehaviour
     {
-        public static CompetitionManager Instance { get; private set; }
+        private static CompetitionManager _instance;
 
-        [Header("Match Timing")]
-        public float prepPhaseDuration = 90f;   // 1.5 минуты подготовки
-        public float bossPhaseDuration = 30f;   // 30 секунд битва за туристов
+        // САМОСОЗДАЮЩИЙСЯ SINGLETON: Создается моментально в ту же миллисекунду при первом запросе!
+        public static CompetitionManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = Object.FindFirstObjectByType<CompetitionManager>();
+                    if (_instance == null)
+                    {
+                        GameObject go = new GameObject("[CompetitionManager]");
+                        _instance = go.AddComponent<CompetitionManager>();
+                        Debug.Log("[CompetitionManager] ⚡ Автоматически создан на сцене!");
+                    }
+                }
+                return _instance;
+            }
+        }
+
+        [Header("Match Timing (Настройки таймера)")]
+        public float prepPhaseDuration = 15f;   // 15 СЕКУНД ДО БОССА
+        public float bossPhaseDuration = 15f;   // 15 СЕКУНД БАТЛА
         public float matchTimer = 0f;
 
         [Header("Score Tracker")]
@@ -22,50 +39,72 @@ namespace FoodSurvivors.Core
         public int bossScore = 0;
 
         [Header("Boss Balancing")]
-        public int bossLevelOffset = 1; // Уровень блюд босса на 1 ниже игрока
-        public float playerBonusSpawnPercent = 0.15f; // На 15% больше мобов возле игрока
+        public int bossLevelOffset = 1;
+        public float playerBonusSpawnPercent = 0.15f;
 
         [Header("State")]
         public bool isBossPhase = false;
         private bool bossSpawned = false;
         private RivalBossController activeBoss;
+        private int lastLoggedSecond = -1;
 
         public float TotalMatchDuration => prepPhaseDuration + bossPhaseDuration;
         public float RemainingTime => Mathf.Max(0f, TotalMatchDuration - matchTimer);
 
+        public string ActiveBossName => activeBoss != null ? activeBoss.DisplayName : "СОПЕРНИК";
+
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (_instance != null && _instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
+            _instance = this;
+            Time.timeScale = 1f;
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureInstanceExists()
+        private void Start()
         {
-            if (Instance == null && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene")
-            {
-                GameObject obj = new GameObject("[CompetitionManager]");
-                obj.AddComponent<CompetitionManager>();
-                Debug.Log("[CompetitionManager] Автоматически инициализирован на сцене GameScene!");
-            }
+            Time.timeScale = 1f;
+            matchTimer = 0f;
+            bossSpawned = false;
+            isBossPhase = false;
+            playerScore = 0;
+            bossScore = 0;
+            Debug.Log($"[CompetitionManager] 🏁 СТАРТ ТАЙМЕРА! До босса: {prepPhaseDuration}с. Всего матч: {TotalMatchDuration}с.");
         }
 
         private void Update()
         {
             matchTimer += Time.deltaTime;
 
-            // На 1.5 минуте спавним соперника
+            // Ежесекундный лог прямо в консоль Unity!
+            int curSec = Mathf.FloorToInt(matchTimer);
+            if (curSec != lastLoggedSecond)
+            {
+                lastLoggedSecond = curSec;
+                if (!bossSpawned)
+                {
+                    int toBoss = Mathf.CeilToInt(prepPhaseDuration - matchTimer);
+                    Debug.Log($"[ТАЙМЕР] ⏳ До Шефа-соперника осталось: {toBoss} сек...");
+                }
+                else
+                {
+                    int toEnd = Mathf.CeilToInt(TotalMatchDuration - matchTimer);
+                    Debug.Log($"[БАТЛ] 🔥 До конца матча: {toEnd} сек! Счет: ВЫ {playerScore} : {bossScore} БОСС");
+                }
+            }
+
+            // Ровно на 15 секунде спавним босса
             if (!bossSpawned && matchTimer >= prepPhaseDuration)
             {
                 bossSpawned = true;
+                Debug.Log("[CompetitionManager] 🚨 15 СЕКУНД ПРОШЛО! СПАВНИМ БОССА И ЗАПУСКАЕМ КАТСЦЕНУ!");
                 StartCoroutine(TriggerBossIntroCutscene());
             }
 
-            // Окончание матча (2:00)
+            // На 30 секунде финал
             if (matchTimer >= TotalMatchDuration)
             {
                 EndMatch();
@@ -75,14 +114,14 @@ namespace FoodSurvivors.Core
         private IEnumerator TriggerBossIntroCutscene()
         {
             isBossPhase = true;
-            Debug.Log("[CompetitionManager] 🚨 ПРИБЫТИЕ ШЕФА-СОПЕРНИКА!");
+            Time.timeScale = 0f;
 
-            Time.timeScale = 0f; // Заморозка игры
+            // Сброс счета в 0 для обоих в начале батла!
+            playerScore = 0;
+            bossScore = 0;
 
-            // Спавним босса
             SpawnRivalBoss();
 
-            // Перевод камеры на босса
             CameraFollow cam = Object.FindFirstObjectByType<CameraFollow>();
             Transform originalTarget = cam != null ? cam.target : null;
 
@@ -90,41 +129,38 @@ namespace FoodSurvivors.Core
             {
                 cam.target = activeBoss.transform;
                 cam.transform.position = activeBoss.transform.position + cam.offset;
+                Debug.Log($"[CompetitionManager] 🎥 Камера показывает Шефа-Соперника!");
             }
 
-            yield return new WaitForSecondsRealtime(2.8f); // Показ босса 2.8 сек
+            yield return new WaitForSecondsRealtime(2.5f); // 2.5 секунды показа босса
 
-            // Возврат камеры к игроку
             if (cam != null && originalTarget != null)
             {
                 cam.target = originalTarget;
             }
 
-            Time.timeScale = 1f; // Возобновление игры
+            Time.timeScale = 1f; // Разморозка
+            Debug.Log("[CompetitionManager] ⚔️ КУЛИНАРНЫЙ БАТЛ НАЧАЛСЯ!");
         }
 
         private void SpawnRivalBoss()
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            Vector3 spawnPos = Vector3.zero;
+            Vector3 playerPos = playerObj != null ? playerObj.transform.position : Vector3.zero;
+            Vector3 forward = playerObj != null ? playerObj.transform.forward : Vector3.forward;
 
-            if (MapBoundsManager.Instance != null && playerObj != null)
-            {
-                spawnPos = MapBoundsManager.Instance.GetRandomPositionNearPlayerChunk(playerObj.transform.position);
-            }
-            else if (playerObj != null)
-            {
-                spawnPos = playerObj.transform.position + playerObj.transform.forward * 20f;
-            }
+            // Спавним прямо ПЕРЕД ЛИЦОМ игрока на дороге в 12 метрах!
+            Vector3 spawnPos = playerPos + forward * 12f;
+            spawnPos.y = playerPos.y;
 
             BossArchetype archetype = (BossArchetype)Random.Range(0, 3);
+            Debug.Log($"[CompetitionManager] 👹 Заспавнен Шеф-Соперник: {archetype} на позиции {spawnPos}");
 
             if (archetype == BossArchetype.TripleDelivery)
             {
-                // Спавним 3 курьеров
                 for (int i = 0; i < 3; i++)
                 {
-                    Vector3 pos = spawnPos + new Vector3(Random.Range(-8f, 8f), 0f, Random.Range(-8f, 8f));
+                    Vector3 pos = spawnPos + new Vector3((i - 1) * 3f, 0f, (i - 1) * 2f);
                     CreateBossInstance(pos, archetype, 0.30f);
                 }
             }
@@ -139,24 +175,17 @@ namespace FoodSurvivors.Core
             GameObject bossObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             bossObj.name = $"RivalChef_{archetype}";
             bossObj.transform.position = pos;
-            bossObj.transform.localScale = Vector3.one * 1.6f;
+            bossObj.transform.localScale = Vector3.one * 1.8f;
 
             Renderer r = bossObj.GetComponent<Renderer>();
-            if (r != null) r.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial("M_Rival", new Color(0.9f, 0.2f, 0.8f)); // Пурпурный шеф
+            if (r != null) r.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial("M_Rival", new Color(0.95f, 0.1f, 0.85f));
 
             activeBoss = bossObj.AddComponent<RivalBossController>();
             activeBoss.InitializeBoss(archetype, dmgMult, bossLevelOffset);
         }
 
-        public void AddPlayerScore(int amount = 1)
-        {
-            playerScore += amount;
-        }
-
-        public void AddBossScore(int amount = 1)
-        {
-            bossScore += amount;
-        }
+        public void AddPlayerScore(int amount = 1) => playerScore += amount;
+        public void AddBossScore(int amount = 1) => bossScore += amount;
 
         private void EndMatch()
         {
@@ -164,7 +193,7 @@ namespace FoodSurvivors.Core
             Time.timeScale = 0f;
 
             bool isVictory = playerScore > bossScore;
-            Debug.Log($"[CompetitionManager] 🏁 МАТЧ ЗАВЕРШЕН! Игрок: {playerScore} | Босс: {bossScore} -> Победа: {isVictory}");
+            Debug.Log($"[CompetitionManager] 🏁 ФИНАЛ МАТЧА! Счет: Игрок {playerScore} : {bossScore} Босс -> Победа: {isVictory}");
 
             if (GameOverUI.Instance != null)
             {

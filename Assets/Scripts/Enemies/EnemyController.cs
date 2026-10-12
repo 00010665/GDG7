@@ -38,6 +38,9 @@ namespace FoodSurvivors.Enemies
         private Vector3 busyTargetPos;
         private float busyChangeTimer = 0f;
 
+        private Vector3 lastStuckCheckPos;
+        private float stuckTimer = 0f;
+
         public void Initialize(EnemyData data, EnemyBehaviorState state = EnemyBehaviorState.Hungry)
         {
             enemyData = data;
@@ -84,6 +87,7 @@ namespace FoodSurvivors.Enemies
         private void Start()
         {
             if (playerTransform == null) FindPlayer();
+            lastStuckCheckPos = transform.position;
         }
 
         private void FindPlayer()
@@ -107,6 +111,32 @@ namespace FoodSurvivors.Enemies
                 if (MapBoundsManager.Instance.CheckAndWrapPosition(ref pos))
                 {
                     transform.position = pos;
+                }
+            }
+
+            if (behaviorState != EnemyBehaviorState.Full)
+            {
+                if (Vector3.Distance(transform.position, lastStuckCheckPos) < 0.2f)
+                {
+                    stuckTimer += Time.deltaTime;
+                    if (stuckTimer >= 10f)
+                    {
+                        Debug.Log($"[EnemyController] Моб {gameObject.name} застрял в геометрии карты на 10 сек. Устранение...");
+                        // Пытаемся вытолкнуть в сторону
+                        transform.position += Random.insideUnitSphere * 2.5f;
+                        transform.position = new Vector3(transform.position.x, 1f, transform.position.z);
+
+                        // Если всё еще на месте — удаляем без зависания
+                        if (stuckTimer >= 12f)
+                        {
+                            Destroy(gameObject);
+                        }
+                    }
+                }
+                else
+                {
+                    stuckTimer = 0f;
+                    lastStuckCheckPos = transform.position;
                 }
             }
         }
@@ -182,7 +212,19 @@ namespace FoodSurvivors.Enemies
             }
         }
 
-        public void TakeDamage(float dmg, bool isFromBoss = false)
+        // Стандартный урон от игрока (для SendMessage от луж сальсы, клинков и пуль)
+        public void TakeDamage(float dmg)
+        {
+            ApplyDamage(dmg, false);
+        }
+
+        // Урон от босса-соперника
+        public void TakeDamageFromBoss(float dmg)
+        {
+            ApplyDamage(dmg, true);
+        }
+
+        private void ApplyDamage(float dmg, bool isFromBoss)
         {
             float effectiveDamage = Mathf.Max(1f, dmg - armor);
             currentHealth -= effectiveDamage;
@@ -198,26 +240,27 @@ namespace FoodSurvivors.Enemies
             }
         }
 
-        public void TakeDamage(float dmg)
-        {
-            TakeDamage(dmg, false);
-        }
-
         public void Die(bool isFromBoss = false)
         {
-            // Зачисляем очко победителю
+            // Начисление очков в соревнование
             if (CompetitionManager.Instance != null)
             {
                 if (isFromBoss) CompetitionManager.Instance.AddBossScore(1);
                 else CompetitionManager.Instance.AddPlayerScore(1);
             }
 
+            // Статистика убийств игрока
             if (ExperienceManager.Instance != null && !isFromBoss)
             {
                 ExperienceManager.Instance.enemiesKilledCount++;
             }
 
-            SpawnExperienceGem();
+            // Сферы опыта выпадают ТОЛЬКО если туриста накормил повар!
+            if (!isFromBoss)
+            {
+                SpawnExperienceGem();
+            }
+
             Destroy(gameObject);
         }
 

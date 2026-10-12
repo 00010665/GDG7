@@ -80,7 +80,7 @@ namespace FoodSurvivors.UI
             // Проверка нажатия Esc или Пробела через новый Input System
             if (Keyboard.current != null)
             {
-                if (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame)
+                if (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.pKey.wasPressedThisFrame)
                 {
                     // Если сейчас НЕ открыто окно Level-Up или GameOver
                     if (LevelUpUI.Instance != null && LevelUpUI.Instance.levelUpPanel != null && LevelUpUI.Instance.levelUpPanel.activeSelf) return;

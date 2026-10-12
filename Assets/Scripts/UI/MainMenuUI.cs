@@ -178,18 +178,38 @@ namespace FoodSurvivors.UI
             }
         }
 
-        // Встроенный OnGUI интерфейс настроек (работает сразу без ручной сборки в Canvas!)
         private void OnGUI()
         {
-            if (settingsPanel != null && settingsPanel.activeSelf) return;
-
-            // Если панель настроек открыта, но не собрана в Canvas
-            if (mainMenuPanel != null && !mainMenuPanel.activeSelf && (chefSelectPanel == null || !chefSelectPanel.activeSelf) && (levelSelectPanel == null || !levelSelectPanel.activeSelf))
+            // Рисуем аккуратный блок выбора режима прямо на экране Главного Меню
+            if (mainMenuPanel != null && mainMenuPanel.activeSelf)
             {
-                GUI.backgroundColor = new Color(0.1f, 0.1f, 0.15f, 0.95f);
-                Rect r = new Rect(Screen.width / 2f - 200, Screen.height / 2f - 180, 400, 360);
-                GUI.Window(888, r, DrawSettingsWindow, "⚙️ НАСТРОЙКИ РЕЖИМА ИГРЫ");
+                GUI.backgroundColor = new Color(0.12f, 0.12f, 0.18f, 0.95f);
+                Rect r = new Rect(20, Screen.height - 210, 320, 190);
+                GUI.Box(r, "");
+
+                GUILayout.BeginArea(r);
+                GUILayout.Space(8);
+                GUILayout.Label("<b>  ⚙️ РЕЖИМ ИГРЫ (ЧЕК-ЛИСТ):</b>", GetHeaderStyle());
+                GUILayout.Space(5);
+
+                StaminaMode cur = GameManager.Instance != null ? GameManager.Instance.selectedStaminaMode : StaminaMode.DashOnly;
+
+                string m1 = (cur == StaminaMode.Disabled) ? "<b><color=green>[X] 1. БЕЗ СТАМИНЫ</color></b>" : "[  ] 1. Без стамины";
+                if (GUILayout.Button(m1, GUILayout.Height(36))) SetStaminaMode(StaminaMode.Disabled);
+
+                string m2 = (cur == StaminaMode.DashOnly) ? "<b><color=green>[X] 2. СТАМИНА - РЫВОК</color></b>" : "[  ] 2. Стамина - Рывок";
+                if (GUILayout.Button(m2, GUILayout.Height(36))) SetStaminaMode(StaminaMode.DashOnly);
+
+                string m3 = (cur == StaminaMode.DamageBoostOnly) ? "<b><color=green>[X] 3. СТАМИНА - УРОН</color></b>" : "[  ] 3. Стамина - Урон";
+                if (GUILayout.Button(m3, GUILayout.Height(36))) SetStaminaMode(StaminaMode.DamageBoostOnly);
+
+                GUILayout.EndArea();
             }
+        }
+
+        private GUIStyle GetHeaderStyle()
+        {
+            return new GUIStyle(GUI.skin.label) { fontSize = 13, fontStyle = FontStyle.Bold, normal = { textColor = new Color(0.2f, 0.85f, 1f) } };
         }
 
         private void DrawSettingsWindow(int id)

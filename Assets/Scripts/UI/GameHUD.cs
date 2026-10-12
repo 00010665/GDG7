@@ -126,8 +126,19 @@ namespace FoodSurvivors.UI
 
             StaminaSystem st = playerController.Stamina;
 
+            // Скрываем шкалу полностью, если выбран режим "Без стамины"
+            if (st.currentMode == StaminaMode.Disabled)
+            {
+                if (hpSlider != null && hpSlider.gameObject.activeSelf)
+                {
+                    hpSlider.gameObject.SetActive(false);
+                }
+                return;
+            }
+
             if (hpSlider != null)
             {
+                if (!hpSlider.gameObject.activeSelf) hpSlider.gameObject.SetActive(true);
                 hpSlider.maxValue = st.maxStamina;
                 hpSlider.value = st.currentStamina;
             }
@@ -142,19 +153,41 @@ namespace FoodSurvivors.UI
 
         private void UpdateTimerHUD()
         {
+            if (timerText == null) return;
+
+            // Включаем поддержку цветных тегов и достаточную ширину
+            timerText.richText = true;
+            RectTransform rt = timerText.rectTransform;
+            if (rt.sizeDelta.x < 650f)
+            {
+                rt.sizeDelta = new Vector2(700f, 65f);
+                timerText.enableWordWrapping = false;
+                timerText.fontSize = 20f;
+            }
+
             if (CompetitionManager.Instance != null)
             {
-                float remaining = CompetitionManager.Instance.RemainingTime;
-                int mins = Mathf.FloorToInt(remaining / 60f);
-                int secs = Mathf.FloorToInt(remaining % 60f);
+                float totalRemaining = CompetitionManager.Instance.RemainingTime;
+                int mins = Mathf.FloorToInt(totalRemaining / 60f);
+                int secs = Mathf.FloorToInt(totalRemaining % 60f);
 
-                int pScore = CompetitionManager.Instance.playerScore;
-                int bScore = CompetitionManager.Instance.bossScore;
-
-                if (timerText != null)
+                if (CompetitionManager.Instance.isBossPhase)
                 {
-                    string phaseLabel = CompetitionManager.Instance.isBossPhase ? "<color=red>КУЛИНАРНЫЙ БАТЛ!</color>\n" : "";
-                    timerText.text = $"{phaseLabel}⏳ {mins:00}:{secs:00}\n<b><color=cyan>ВЫ: {pScore}</color>   VS   <color=magenta>БОСС: {bScore}</color></b>";
+                    // ФАЗА БОССА: Яркие закрытые теги и имя типа босса!
+                    int pScore = CompetitionManager.Instance.playerScore;
+                    int bScore = CompetitionManager.Instance.bossScore;
+                    string bossName = CompetitionManager.Instance.ActiveBossName;
+
+                    timerText.text = $"КУЛИНАРНЫЙ БАТЛ! {mins:00}:{secs:00}\n<color=#00FFFF>ВЫ: {pScore}</color>   VS   <color=#FF00FF>{bossName}: {bScore}</color>";
+                }
+                else
+                {
+                    // ФАЗА ПОДГОТОВКИ: Обычный чистый таймер времени без спойлеров!
+                    float elapsed = CompetitionManager.Instance.matchTimer;
+                    int eMins = Mathf.FloorToInt(elapsed / 60f);
+                    int eSecs = Mathf.FloorToInt(elapsed % 60f);
+
+                    timerText.text = $"ВРЕМЯ: {eMins:00}:{eSecs:00}";
                 }
             }
         }

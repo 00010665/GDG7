@@ -37,7 +37,13 @@ namespace FoodSurvivors.Player
         private bool isDashing = false;
         private float dashCooldownTimer = 0f;
 
+        private float invulnerabilityTimer = 0f;
+
         public bool IsDashing => isDashing;
+
+        private float regenTickTimer = 0f;
+        public float regenInterval = 2.0f; // Каждые 2 секунды
+        public float regenAmountPerTick = 5.0f; // 5 единиц стамины
 
         private void Awake()
         {
@@ -58,14 +64,22 @@ namespace FoodSurvivors.Player
         {
             dashCooldownTimer -= Time.deltaTime;
 
-            // Пассивная регенерация стамины (в режимах с рывком)
-            if (currentMode != StaminaMode.DamageBoostOnly && currentMode != StaminaMode.Disabled && !isDashing)
+            // Единая регенерация для обоих режимов: 5 ед раз в 2 секунды
+            if (currentMode != StaminaMode.Disabled && !isDashing)
             {
-                if (currentStamina < maxStamina)
+                regenTickTimer += Time.deltaTime;
+                if (regenTickTimer >= regenInterval)
                 {
-                    currentStamina = Mathf.Min(maxStamina, currentStamina + staminaRegenPerSec * Time.deltaTime);
+                    regenTickTimer = 0f;
+                    if (currentStamina < maxStamina)
+                    {
+                        float bonusFromPassive = staminaRegenPerSec > 15f ? (staminaRegenPerSec - 15f) : 0f;
+                        currentStamina = Mathf.Min(maxStamina, currentStamina + regenAmountPerTick + bonusFromPassive);
+                    }
                 }
             }
+
+            invulnerabilityTimer -= Time.deltaTime;
         }
 
         /// <summary>
@@ -87,6 +101,9 @@ namespace FoodSurvivors.Player
         public void OnMobHitPlayer(float damageImpact)
         {
             if (isDashing) return;
+            if (invulnerabilityTimer > 0f) return; // Игнорируем частые тики урона!
+
+            invulnerabilityTimer = 0.5f; // Повар получает урон не чаще 1 раза в 0.5 сек
 
             if (currentMode == StaminaMode.DamageBoostOnly || currentMode == StaminaMode.Hybrid)
             {
