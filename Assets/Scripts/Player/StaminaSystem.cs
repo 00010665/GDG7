@@ -1,18 +1,20 @@
 using UnityEngine;
+using FoodSurvivors.Core;
 
 namespace FoodSurvivors.Player
 {
     public enum StaminaMode
     {
-        DamageBoostOnly, // Стамина = бонус урона, тратится при ударах мобов
-        DashOnly,        // Стамина тратится на рывки, пассивно восстанавливается
-        Hybrid           // И рывки, и бонус к урону
+        Disabled,        // 1. БЕЗ СТАМИНЫ (Шкала скрыта, урон обычный, рывок бесплатный)
+        DamageBoostOnly, // 2. СТАМИНА - УРОН (Тратится от ударов, дает бонус к урону)
+        DashOnly,        // 3. СТАМИНА - РЫВОК (Тратится на рывки с неуязвимостью, регенерирует)
+        Hybrid           // 4. ГИБРИДНЫЙ (И рывки, и бонус к урону)
     }
 
     public class StaminaSystem : MonoBehaviour
     {
         [Header("Mode Selection")]
-        public StaminaMode currentMode = StaminaMode.Hybrid;
+        public StaminaMode currentMode = StaminaMode.DashOnly;
 
         [Header("Stamina Stats")]
         public float maxStamina = 100f;
@@ -44,12 +46,20 @@ namespace FoodSurvivors.Player
             currentStamina = maxStamina;
         }
 
+        private void Start()
+        {
+            if (GameManager.Instance != null)
+            {
+                currentMode = GameManager.Instance.selectedStaminaMode;
+            }
+        }
+
         private void Update()
         {
             dashCooldownTimer -= Time.deltaTime;
 
             // Пассивная регенерация стамины (в режимах с рывком)
-            if (currentMode != StaminaMode.DamageBoostOnly && !isDashing)
+            if (currentMode != StaminaMode.DamageBoostOnly && currentMode != StaminaMode.Disabled && !isDashing)
             {
                 if (currentStamina < maxStamina)
                 {
@@ -64,7 +74,7 @@ namespace FoodSurvivors.Player
         /// </summary>
         public int GetFlatDamageBonus()
         {
-            if (currentMode == StaminaMode.DashOnly) return 0;
+            if (currentMode == StaminaMode.DashOnly || currentMode == StaminaMode.Disabled) return 0;
             if (damageDivisor <= 0.01f) return 0;
 
             float rawBonus = currentStamina / damageDivisor;
@@ -76,7 +86,7 @@ namespace FoodSurvivors.Player
         /// </summary>
         public void OnMobHitPlayer(float damageImpact)
         {
-            if (isDashing) return; // Неуязвимость во время рывка
+            if (isDashing) return;
 
             if (currentMode == StaminaMode.DamageBoostOnly || currentMode == StaminaMode.Hybrid)
             {
@@ -91,9 +101,12 @@ namespace FoodSurvivors.Player
         public bool TryPerformDash(Vector3 inputDirection)
         {
             if (currentMode == StaminaMode.DamageBoostOnly) return false;
-            if (isDashing || dashCooldownTimer > 0f || currentStamina < dashCost) return false;
+            if (isDashing || dashCooldownTimer > 0f) return false;
 
-            currentStamina -= dashCost;
+            float actualCost = currentMode == StaminaMode.Disabled ? 0f : dashCost;
+            if (currentStamina < actualCost) return false;
+
+            currentStamina -= actualCost;
             dashCooldownTimer = dashCooldown;
             StartCoroutine(DoDashRoutine(inputDirection));
             return true;
@@ -103,11 +116,9 @@ namespace FoodSurvivors.Player
         {
             isDashing = true;
 
-            // Вектор рывка (если стоим на месте — рывок вперед)
             Vector3 dashDir = direction.sqrMagnitude > 0.01f ? direction.normalized : transform.forward;
             float speed = dashDistance / dashDuration;
 
-            // Игнорируем коллизии с врагами на время рывка
             SetEnemyCollisionsIgnored(true);
 
             float elapsed = 0f;
@@ -126,7 +137,6 @@ namespace FoodSurvivors.Player
                 yield return null;
             }
 
-            // Возвращаем коллизии назад
             SetEnemyCollisionsIgnored(false);
             isDashing = false;
         }
@@ -136,7 +146,6 @@ namespace FoodSurvivors.Player
             Collider playerCol = GetComponent<Collider>();
             if (playerCol == null) return;
 
-            // Игнорируем коллайдеры мобов при рывке, но стены блокируют!
             GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
             foreach (var e in enemies)
             {

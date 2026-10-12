@@ -43,6 +43,17 @@ namespace FoodSurvivors.Core
             Instance = this;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void EnsureInstanceExists()
+        {
+            if (Instance == null && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "GameScene")
+            {
+                GameObject obj = new GameObject("[CompetitionManager]");
+                obj.AddComponent<CompetitionManager>();
+                Debug.Log("[CompetitionManager] Автоматически инициализирован на сцене GameScene!");
+            }
+        }
+
         private void Update()
         {
             matchTimer += Time.deltaTime;

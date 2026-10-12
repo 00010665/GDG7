@@ -6,14 +6,17 @@ namespace FoodSurvivors.Data
 {
     public enum PassiveType
     {
-        HealthBonus,
-        SpeedBonus,
-        ArmorBonus,
-        DamageBonus,
-        CooldownReduction,
-        AreaBonus,
-        XpBonus,
-        MagnetBonus
+        StaminaRegenBonus,  // Регенерация стамины
+        StaminaDamageBonus, // Усиление бонуса урона
+        DashCostBonus,      // Удешевление рывка
+        SpeedBonus,         // Скорость
+        ArmorBonus,         // Броня
+        DamageBonus,        // Урон
+        CooldownReduction,  // Перезарядка
+        AreaBonus,          // Размер атак
+        XpBonus,            // Опыт
+        MagnetBonus,        // Магнит
+        HealthBonus         // Сохранено для обратной совместимости ассетов
     }
 
     [Serializable]

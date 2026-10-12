@@ -17,6 +17,9 @@ namespace FoodSurvivors.Core
         public List<ChefData> availableChefs = new List<ChefData>();
         public List<LevelData> availableLevels = new List<LevelData>();
 
+        [Header("Game Mode Settings")]
+        public FoodSurvivors.Player.StaminaMode selectedStaminaMode = FoodSurvivors.Player.StaminaMode.DashOnly;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

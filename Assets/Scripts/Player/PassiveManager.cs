@@ -66,7 +66,7 @@ namespace FoodSurvivors.Player
             }
 
             ApplyPassiveEffect(existing, currentLvl);
-            Debug.Log($"[PassiveManager] Applied/Upgraded {existing.passiveName} to Level {currentLvl}!");
+            Debug.Log($"[PassiveManager] Применена пассивка: {existing.passiveName} (Ур. {currentLvl})");
         }
 
         public int GetPassiveLevel(PassiveData data)
@@ -83,6 +83,7 @@ namespace FoodSurvivors.Player
         private void ApplyPassiveEffect(PassiveData data, int level)
         {
             if (playerController == null) playerController = GetComponent<PlayerController>();
+            StaminaSystem st = playerController.Stamina;
 
             float val = 0f;
             if (data.levels != null && data.levels.Count >= level)
@@ -90,68 +91,50 @@ namespace FoodSurvivors.Player
                 val = data.levels[level - 1].value;
             }
 
-            string pName = data.passiveName != null ? data.passiveName.ToLower() : "";
-
             switch (data.passiveType)
             {
+                // 1. Регенерация стамины
+                case PassiveType.StaminaRegenBonus:
+                    if (st != null) st.staminaRegenPerSec += (val > 0 ? val : 5f);
+                    break;
+
+                // 2. Усиление бонуса урона (снижение делителя)
+                case PassiveType.StaminaDamageBonus:
+                    if (st != null) st.damageDivisor = Mathf.Max(6f, st.damageDivisor - (val > 0 ? val : 3f));
+                    break;
+
+                // 3. Удешевление рывка
+                case PassiveType.DashCostBonus:
+                    if (st != null) st.dashCost = Mathf.Max(8f, st.dashCost - (val > 0 ? val : 4f));
+                    break;
+
                 case PassiveType.ArmorBonus:
-                    float armorAdd = val > 0 ? val : 2f;
-                    playerController.currentArmor += armorAdd;
+                    playerController.currentArmor += (val > 0 ? val : 2f);
                     break;
 
                 case PassiveType.SpeedBonus:
-                    float speedAdd = val > 0 ? val : 1.2f;
-                    playerController.currentMoveSpeed += speedAdd;
+                    playerController.currentMoveSpeed += (val > 0 ? val : 1.2f);
                     break;
 
                 case PassiveType.DamageBonus:
-                    float dmgAdd = val > 0 ? val : 0.15f;
-                    playerController.damageMultiplier += dmgAdd;
+                    playerController.damageMultiplier += (val > 0 ? val : 0.15f);
                     break;
 
                 case PassiveType.AreaBonus:
-                    float areaAdd = val > 0 ? val : 0.15f;
-                    playerController.areaMultiplier += areaAdd;
+                    playerController.areaMultiplier += (val > 0 ? val : 0.15f);
                     playerController.damageMultiplier += 0.05f;
                     break;
 
                 case PassiveType.CooldownReduction:
-                    float cdAdd = val > 0 ? val : 0.08f;
-                    playerController.cooldownReduction = Mathf.Min(0.70f, playerController.cooldownReduction + cdAdd);
+                    playerController.cooldownReduction = Mathf.Min(0.70f, playerController.cooldownReduction + (val > 0 ? val : 0.08f));
                     break;
 
                 case PassiveType.XpBonus:
-                    float xpAdd = val > 0 ? val : 0.20f;
-                    if (ExperienceManager.Instance != null)
-                    {
-                        ExperienceManager.Instance.xpMultiplier += xpAdd;
-                    }
-                    break;
-
-                case PassiveType.HealthBonus:
-                    float staminaAdd = val > 0 ? val : 25f;
-                    if (playerController.Stamina != null)
-                    {
-                        playerController.Stamina.maxStamina += staminaAdd;
-                        playerController.Stamina.currentStamina += staminaAdd;
-                        playerController.Stamina.staminaRegenPerSec += 2.5f;
-                    }
+                    if (ExperienceManager.Instance != null) ExperienceManager.Instance.xpMultiplier += (val > 0 ? val : 0.20f);
                     break;
 
                 case PassiveType.MagnetBonus:
-                    float magAdd = val > 0 ? val : 1.5f;
-                    playerController.magnetRadius += magAdd;
-                    break;
-
-                default:
-                    if (pName.Contains("сыр") || pName.Contains("armor")) playerController.currentArmor += 2f;
-                    else if (pName.Contains("васаби") || pName.Contains("обувь") || pName.Contains("speed")) playerController.currentMoveSpeed += 1.2f;
-                    else if (pName.Contains("порция") || pName.Contains("damage")) playerController.damageMultiplier += 0.15f;
-                    else if (pName.Contains("перец") || pName.Contains("area")) { playerController.areaMultiplier += 0.15f; playerController.damageMultiplier += 0.05f; }
-                    else if (pName.Contains("подача") || pName.Contains("cooldown")) playerController.cooldownReduction = Mathf.Min(0.70f, playerController.cooldownReduction + 0.08f);
-                    else if (pName.Contains("чаевые") || pName.Contains("xp")) { if (ExperienceManager.Instance != null) ExperienceManager.Instance.xpMultiplier += 0.20f; }
-                    else if (pName.Contains("ингредиенты") || pName.Contains("health")) if (playerController.Stamina != null){ playerController.Stamina.maxStamina += 25f; playerController.Stamina.currentStamina += 25f; playerController.Stamina.staminaRegenPerSec += 2.5f;}
-                    else if (pName.Contains("фартук") || pName.Contains("magnet")) playerController.magnetRadius += 1.5f;
+                    playerController.magnetRadius += (val > 0 ? val : 1.5f);
                     break;
             }
         }

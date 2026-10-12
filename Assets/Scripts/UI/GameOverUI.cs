@@ -99,7 +99,8 @@ namespace FoodSurvivors.UI
                 int secs = Mathf.FloorToInt(elapsed % 60f);
 
                 int level = ExperienceManager.Instance != null ? ExperienceManager.Instance.currentLevel : 1;
-                int kills = ExperienceManager.Instance != null ? ExperienceManager.Instance.enemiesKilledCount : 0;
+                int myKills = CompetitionManager.Instance != null ? CompetitionManager.Instance.playerScore : (ExperienceManager.Instance != null ? ExperienceManager.Instance.enemiesKilledCount : 0);
+                int bossKills = CompetitionManager.Instance != null ? CompetitionManager.Instance.bossScore : 0;
                 int totalXp = ExperienceManager.Instance != null ? Mathf.RoundToInt(ExperienceManager.Instance.totalXpCollected) : 0;
 
                 // Сбор списка активных Блюд
@@ -134,15 +135,23 @@ namespace FoodSurvivors.UI
                     }
                     if (pNames.Count > 0) passivesList = string.Join(", ", pNames);
                 }
+                string resultHeader = isVictory ? "🏆 ПОБЕДА! ВЫ ПЕРЕКОРМИЛИ СОПЕРНИКА!" : "💀 ПОРАЖЕНИЕ! СОПЕРНИК НАКОРМИЛ БОЛЬШЕ!";
 
                 // Формируем детальный финансово-кулинарный отчет
-                statsText.text = $"<b>⏱️ Время в бою:</b> {mins:00}:{secs:00}\n" +
-                                 $"<b>🏆 Уровень повара:</b> {level}\n" +
-                                 $"<b>👾 Накормлено туристов:</b> {kills}\n" +
-                                 $"<b>💰 Собранные чаевые (XP):</b> {totalXp}\n\n" +
-                                 $"<b>🍲 Экипированные блюда:</b>\n<color=#FFFF88>{weaponsList}</color>\n\n" +
-                                 $"<b>🧂 Активные таланты:</b>\n<color=#88FFFF>{passivesList}</color>";
+                statsText.text = $"<b>{resultHeader}</b>\n\n" +
+                             $"<b>⏱️ Время раунда:</b> {mins:00}:{secs:00}\n" +
+                             $"<b>🏆 Уровень повара:</b> {level}\n" +
+                             $"<b><color=cyan>👨‍🍳 Ваш счет (Накормлено): {myKills}</color></b>\n" +
+                             $"<b><color=magenta>👹 Счет соперника (Накормлено): {bossKills}</color></b>\n\n" +
+                             $"<b>🍲 Экипированные блюда:</b> {weaponsList}\n" +
+                             $"<b>🧂 Активные таланты:</b> {passivesList}";
             }
+
+           
+
+            
+
+            
 
             Debug.Log($"[GameOverUI] Матч окончен! Итоговый отчет сгенерирован.");
         }

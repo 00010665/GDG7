@@ -80,29 +80,28 @@ namespace FoodSurvivors.UI
 
             List<UpgradeOption> pool = new List<UpgradeOption>();
 
-            // --- 9 Weapons ---
+            // --- 9 Блюд ---
             AddWeaponOption(pool, wm, "Паста-пушка", "Запускает пасту в ближайших туристов", Color.yellow);
             AddWeaponOption(pool, wm, "Сашими-клинки", "Клинки вращаются вокруг повара", Color.cyan);
             AddWeaponOption(pool, wm, "Острое Сальса-пятно", "AOE сальса под ногами", Color.red);
             AddWeaponOption(pool, wm, "Горячий Суп", "Взрывной навесной снаряд по площади", new Color(1f, 0.5f, 0.1f));
             AddWeaponOption(pool, wm, "Суши-сет", "Атака во все 4 стороны крестом", new Color(0.1f, 0.8f, 0.4f));
             AddWeaponOption(pool, wm, "Тако-бросок", "Рикошет по цепочке туристов", new Color(0.9f, 0.7f, 0.2f));
-            AddWeaponOption(pool, wm, "Нож для Пиццы", "Пробивающий всех насквозь вращающийся диск", new Color(0.85f, 0.85f, 0.95f));
+            AddWeaponOption(pool, wm, "Нож для Пиццы", "Пробивающий всех насквозь диск", new Color(0.85f, 0.85f, 0.95f));
             AddWeaponOption(pool, wm, "Чайник с Кипятком", "Непрерывная струя кипятка перед собой", new Color(0.3f, 0.7f, 1f));
             AddWeaponOption(pool, wm, "Мега-Бургер", "Падение гигантского бургера сверху", new Color(0.8f, 0.45f, 0.15f));
 
-            // --- 9 Passives ---
-            AddPassiveOption(pool, pm, "Сырная броня", "+2 к Броне", Color.yellow, PassiveType.ArmorBonus, 2f);
+            // --- 9 Пассивок (Новая Стамина-Мета) ---
+            AddPassiveOption(pool, pm, "Второе Дыхание", "+5 к Регенерации Стамины в секунду", new Color(0.2f, 0.9f, 0.4f), PassiveType.StaminaRegenBonus, 5f);
+            AddPassiveOption(pool, pm, "Силовой Напор", "Увеличивает плоский бонус урона от запаса стамины", new Color(1f, 0.5f, 0.1f), PassiveType.StaminaDamageBonus, 3f);
+            AddPassiveOption(pool, pm, "Легкая Поступь", "-5 к затратам Стамины на каждый рывок", new Color(0.3f, 0.8f, 1f), PassiveType.DashCostBonus, 4f);
+            AddPassiveOption(pool, pm, "Сырная броня", "+2 к Защите стамины от ударов мобов", Color.yellow, PassiveType.ArmorBonus, 2f);
             AddPassiveOption(pool, pm, "Васаби-ускорение", "+1.2 к Скорости перемещения", new Color(0.4f, 0.9f, 0.3f), PassiveType.SpeedBonus, 1.2f);
             AddPassiveOption(pool, pm, "Острый перчик", "+15% к Зоне поражения и +5% к Урону", Color.red, PassiveType.AreaBonus, 0.15f);
-            AddPassiveOption(pool, pm, "Быстрая Подача", "-8% к Перезарядке атак", new Color(0.9f, 0.5f, 0.9f), PassiveType.CooldownReduction, 0.08f);
-            AddPassiveOption(pool, pm, "Большая Порция", "+15% к Базовому урону блюд", new Color(1f, 0.4f, 0.2f), PassiveType.DamageBonus, 0.15f);
+            AddPassiveOption(pool, pm, "Быстрая Подача", "-8% к Перезарядке атак блюд", new Color(0.9f, 0.5f, 0.9f), PassiveType.CooldownReduction, 0.08f);
+            AddPassiveOption(pool, pm, "Большая Порция", "+15% к Базовому урону всех блюд", new Color(1f, 0.4f, 0.2f), PassiveType.DamageBonus, 0.15f);
             AddPassiveOption(pool, pm, "Чаевые", "+20% к Получаемому опыту", Color.yellow, PassiveType.XpBonus, 0.20f);
-            AddPassiveOption(pool, pm, "Удобная Обувь", "+1.0 к Скорости бега", Color.green, PassiveType.SpeedBonus, 1.0f);
-            AddPassiveOption(pool, pm, "Свежие Ингредиенты", "+25 к Макс. HP и +1.5 HP/сек регенерация", Color.magenta, PassiveType.HealthBonus, 25f);
-            AddPassiveOption(pool, pm, "Магнитный Фартук", "+1.5 к Радиусу сбора чаевых", Color.cyan, PassiveType.MagnetBonus, 1.5f);
 
-            // Select 3 unique random options
             for (int i = 0; i < 3 && pool.Count > 0; i++)
             {
                 int randomIndex = Random.Range(0, pool.Count);
