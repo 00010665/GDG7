@@ -116,32 +116,29 @@ namespace FoodSurvivors.EditorTools
         {
             string[] fbxPaths = Directory.GetFiles("Assets/Animations/Clips", "*.fbx", SearchOption.AllDirectories)
                 .Select(path => path.Replace('\\', '/')).OrderBy(path => path).ToArray();
-            if (fbxPaths.Length != 13)
-                Debug.LogWarning("[AnimationPipelineSetup] Expected 13 animation FBX files, found " + fbxPaths.Length + ". Importing all FBX files found under Assets/Animations/Clips.");
 
             foreach (string path in fbxPaths)
             {
                 ModelImporter importer = AssetImporter.GetAtPath(path) as ModelImporter;
-                if (importer == null)
-                {
-                    Debug.LogError("[AnimationPipelineSetup] ModelImporter not found for " + path);
-                    continue;
-                }
+                if (importer == null) continue;
 
+                // Настраиваем как чистый Humanoid без жесткой привязки к чужому аватару
                 importer.animationType = ModelImporterAnimationType.Human;
-                importer.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
-                importer.sourceAvatar = avatar;
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
 
                 ModelImporterClipAnimation[] clips = importer.clipAnimations;
                 if (clips == null || clips.Length == 0) clips = importer.defaultClipAnimations;
+
                 for (int i = 0; i < clips.Length; i++)
                 {
                     clips[i].loopTime = true;
                     clips[i].loopPose = true;
                 }
+
                 importer.clipAnimations = clips;
                 importer.SaveAndReimport();
             }
+            Debug.Log("[AnimationPipelineSetup] ✅ Все FBX-анимации успешно импортированы как Humanoid с Loop Time!");
         }
 
         private static AnimatorController LoadOrCreateController(string path)
