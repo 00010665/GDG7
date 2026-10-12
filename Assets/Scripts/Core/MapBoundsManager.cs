@@ -29,6 +29,10 @@ namespace FoodSurvivors.Core
         public float ChunkSizeX => mapSize.x / chunksCountX;
         public float ChunkSizeZ => mapSize.y / chunksCountZ;
 
+        [Header("Blacklisted Chunks (Запрещенные зоны)")]
+        [Tooltip("Координаты чанков [X, Z], где спавн мобов и босса запрещен")]
+        public System.Collections.Generic.List<Vector2Int> blacklistedChunks = new System.Collections.Generic.List<Vector2Int>();
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -102,9 +106,21 @@ namespace FoodSurvivors.Core
         {
             Vector2Int playerChunk = GetChunkCoords(playerPos);
 
-            // Выбираем случайный чанк в радиусе 1 от игрока (соседний чанк)
-            int targetChunkX = Mathf.Clamp(playerChunk.x + Random.Range(-1, 2), 0, chunksCountX - 1);
-            int targetChunkZ = Mathf.Clamp(playerChunk.y + Random.Range(-1, 2), 0, chunksCountZ - 1);
+            int targetChunkX = playerChunk.x;
+            int targetChunkZ = playerChunk.y;
+
+            // Ищем разрешенный соседний чанк (до 10 попыток)
+            for (int attempts = 0; attempts < 10; attempts++)
+            {
+                targetChunkX = Mathf.Clamp(playerChunk.x + Random.Range(-1, 2), 0, chunksCountX - 1);
+                targetChunkZ = Mathf.Clamp(playerChunk.y + Random.Range(-1, 2), 0, chunksCountZ - 1);
+
+                Vector2Int cand = new Vector2Int(targetChunkX, targetChunkZ);
+                if (!blacklistedChunks.Contains(cand))
+                {
+                    break; // Найден чистый чанк!
+                }
+            }
 
             float chunkMinX = MinX + targetChunkX * ChunkSizeX;
             float chunkMinZ = MinZ + targetChunkZ * ChunkSizeZ;
@@ -131,6 +147,14 @@ namespace FoodSurvivors.Core
             {
                 float posZ = MinZ + z * ChunkSizeZ;
                 Gizmos.DrawLine(new Vector3(MinX, 1f, posZ), new Vector3(MaxX, 1f, posZ));
+            }
+
+            Gizmos.color = Color.red;
+            foreach (var b in blacklistedChunks)
+            {
+                float cx = MinX + b.x * ChunkSizeX + ChunkSizeX / 2f;
+                float cz = MinZ + b.y * ChunkSizeZ + ChunkSizeZ / 2f;
+                Gizmos.DrawWireCube(new Vector3(cx, 1f, cz), new Vector3(ChunkSizeX * 0.9f, 2f, ChunkSizeZ * 0.9f));
             }
         }
     }

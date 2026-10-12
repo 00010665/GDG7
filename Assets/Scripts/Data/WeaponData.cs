@@ -4,6 +4,19 @@ using UnityEngine;
 
 namespace FoodSurvivors.Data
 {
+    public enum WeaponType
+    {
+        PastaLauncher,  // Снаряд в ближайшего
+        SashimiSlice,   // Вращение по орбите
+        SalsaSplash,    // Лужа / пятно под ногами
+        SoupBowl,       // Взрывной навесной снаряд
+        SushiSet,       // Выстрел во все 4 стороны
+        TacoThrow,      // Рикошет по толпе
+        PizzaCutter,    // Пробивающий катящийся диск
+        TeaPot,         // Огромный хот-дог / струя перед поваром
+        MegaBurger      // Падение сверху с ударом
+    }
+
     [Serializable]
     public struct WeaponLevelData
     {
@@ -23,6 +36,13 @@ namespace FoodSurvivors.Data
         [TextArea] public string description;
         public Color weaponColor = Color.red;
         public GameObject weaponPrefab;
+
+        [Header("Behavior Mechanics")]
+        public WeaponType weaponType; // Механика оружия (не зависит от названия!)
+
+        [Header("Roster Settings")]
+        public bool isEnabledInRoster = true;
+
         public List<WeaponLevelData> levels = new List<WeaponLevelData>();
 
         [Header("Media Assets")]

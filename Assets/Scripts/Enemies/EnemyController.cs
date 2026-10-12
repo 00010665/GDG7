@@ -47,6 +47,19 @@ namespace FoodSurvivors.Enemies
             behaviorState = state;
             gameObject.tag = "Enemy";
 
+            Animator animator = GetComponentInChildren<Animator>(true);
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                foreach (AnimatorControllerParameter parameter in animator.parameters)
+                {
+                    if (parameter.name == "State" && parameter.type == AnimatorControllerParameterType.Int)
+                    {
+                        animator.SetInteger("State", (int)state);
+                        break;
+                    }
+                }
+            }
+
             if (enemyData != null)
             {
                 maxHealth = enemyData.maxHealth;
@@ -60,7 +73,8 @@ namespace FoodSurvivors.Enemies
                 transform.localScale = enemyData.scale != Vector3.zero ? enemyData.scale : (isBoss ? Vector3.one * 2.5f : Vector3.one);
 
                 enemyRenderer = GetComponentInChildren<Renderer>();
-                if (enemyRenderer != null)
+                bool hasSkinnedCharacter = GetComponentInChildren<SkinnedMeshRenderer>() != null;
+                if (enemyRenderer != null && !hasSkinnedCharacter)
                 {
                     enemyRenderer.material.color = enemyData.enemyColor;
                 }
@@ -212,13 +226,12 @@ namespace FoodSurvivors.Enemies
             }
         }
 
-        // Стандартный урон от игрока (для SendMessage от луж сальсы, клинков и пуль)
         public void TakeDamage(float dmg)
         {
+            // Если поблизости босс наносит урон своим триггером или оружием
             ApplyDamage(dmg, false);
         }
 
-        // Урон от босса-соперника
         public void TakeDamageFromBoss(float dmg)
         {
             ApplyDamage(dmg, true);
@@ -242,20 +255,36 @@ namespace FoodSurvivors.Enemies
 
         public void Die(bool isFromBoss = false)
         {
+            // УМНЫЙ ФИЛЬТР: Если рядом есть Шеф-Соперник — это 100% убийство босса!
+            if (!isFromBoss)
+            {
+                FoodSurvivors.Boss.RivalBossController[] bosses = Object.FindObjectsByType<FoodSurvivors.Boss.RivalBossController>(FindObjectsSortMode.None);
+                foreach (var b in bosses)
+                {
+                    if (b == null) continue;
+                    float checkRadius = (b.archetype == FoodSurvivors.Boss.BossArchetype.FoodCart) ? b.pullRadius + 3f : 10f;
+                    if (Vector3.Distance(transform.position, b.transform.position) <= checkRadius)
+                    {
+                        isFromBoss = true; // Моб накормлен в зоне действия босса!
+                        break;
+                    }
+                }
+            }
+
             // Начисление очков в соревнование
-            if (CompetitionManager.Instance != null)
+            if (CompetitionManager.Instance != null && CompetitionManager.Instance.isBossPhase)
             {
                 if (isFromBoss) CompetitionManager.Instance.AddBossScore(1);
                 else CompetitionManager.Instance.AddPlayerScore(1);
             }
 
-            // Статистика убийств игрока
+            // Статистика игрока (только если накормил игрок)
             if (ExperienceManager.Instance != null && !isFromBoss)
             {
                 ExperienceManager.Instance.enemiesKilledCount++;
             }
 
-            // Сферы опыта выпадают ТОЛЬКО если туриста накормил повар!
+            // ГЕМ ВЫПАДАЕТ СТРОГО ЕСЛИ ЭТО НЕ БОСС!
             if (!isFromBoss)
             {
                 SpawnExperienceGem();

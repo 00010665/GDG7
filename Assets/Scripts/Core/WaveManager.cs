@@ -205,14 +205,18 @@ namespace FoodSurvivors.Core
 
         public GameObject SpawnEnemyAtPosition(EnemyData enemyData, Vector3 spawnPos, EnemyBehaviorState state, bool isBoss = false)
         {
-            GameObject enemyObj = GameObject.CreatePrimitive(isBoss ? PrimitiveType.Cube : PrimitiveType.Capsule);
+            CharacterPrefabRegistry registry = Resources.Load<CharacterPrefabRegistry>("FoodSurvivors/CharacterPrefabRegistry");
+            GameObject visualPrefab = isBoss ? registry?.levelBossPrefab : registry?.GetEnemyPrefab(enemyData != null ? enemyData.name : "");
+            GameObject enemyObj = visualPrefab != null
+                ? Instantiate(visualPrefab, spawnPos, Quaternion.identity)
+                : GameObject.CreatePrimitive(isBoss ? PrimitiveType.Cube : PrimitiveType.Capsule);
             enemyObj.name = $"Enemy_{enemyData.enemyName}_{state}";
             enemyObj.transform.position = spawnPos;
 
             if (isBoss) enemyObj.transform.localScale = Vector3.one * 2.5f;
 
-            Renderer rend = enemyObj.GetComponent<Renderer>();
-            if (rend != null)
+            Renderer rend = enemyObj.GetComponentInChildren<Renderer>();
+            if (rend != null && visualPrefab == null)
             {
                 // Небольшой цветовой оттенок по поведению:
                 // Голодные — красные, Занятые — оранжево-желтые, Сытые — зеленовато-серые
@@ -222,10 +226,14 @@ namespace FoodSurvivors.Core
                 rend.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial($"M_{state}", col);
             }
 
-            Rigidbody rb = enemyObj.AddComponent<Rigidbody>();
+            Rigidbody rb = enemyObj.GetComponent<Rigidbody>();
+            if (rb == null) rb = enemyObj.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.isKinematic = true;
             rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY;
 
-            EnemyController enemyCtrl = enemyObj.AddComponent<EnemyController>();
+            EnemyController enemyCtrl = enemyObj.GetComponent<EnemyController>();
+            if (enemyCtrl == null) enemyCtrl = enemyObj.AddComponent<EnemyController>();
             enemyCtrl.Initialize(enemyData, state);
 
             return enemyObj;
@@ -253,77 +261,9 @@ namespace FoodSurvivors.Core
             Vector3 spawnPos = playerTransform.position + spawnOffset;
             spawnPos.y = isBoss ? 1.5f : 1.0f;
 
-            GameObject enemyObj;
-            if (isBoss)
-            {
-                enemyObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                enemyObj.name = $"BOSS_{enemyData.enemyName}";
-            }
-            else
-            {
-                enemyObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                enemyObj.name = $"Enemy_{enemyData.enemyName}";
-            }
-
-            enemyObj.transform.position = spawnPos;
-
-            // Масштаб босса — 2.5x для заметности
-            if (isBoss)
-            {
-                enemyObj.transform.localScale = Vector3.one * 2.5f;
-            }
-
-            // Назначаем яркие материалы по типу
-            Renderer rend = enemyObj.GetComponent<Renderer>();
-            if (rend != null)
-            {
-                if (isBoss)
-                {
-                    rend.sharedMaterial = DefaultMaterialsGenerator.GetBossMaterial();
-                }
-                else if (enemyData != null && enemyData.moveSpeed >= 5f)
-                {
-                    // Быстрый враг — оранжевый
-                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyFastMaterial();
-                }
-                else
-                {
-                    // Обычный враг — красный
-                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyNormalMaterial();
-                }
-            }
-
-            Collider col = enemyObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = false;
-
-            Rigidbody rb = enemyObj.GetComponent<Rigidbody>();
-            if (rb == null)
-            {
-                rb = enemyObj.AddComponent<Rigidbody>();
-                rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY;
-            }
-
-            EnemyController enemyCtrl = enemyObj.AddComponent<EnemyController>();
-            EnemyVisuals visuals = enemyObj.AddComponent<EnemyVisuals>();
-            enemyCtrl.Initialize(enemyData);
-            visuals.ApplyEnemyVisuals(enemyData);
-
-            // Переопределяем материал ещё раз после инициализации (на случай если EnemyController перезаписал)
-            if (rend != null)
-            {
-                if (isBoss)
-                {
-                    rend.sharedMaterial = DefaultMaterialsGenerator.GetBossMaterial();
-                }
-                else if (enemyData.moveSpeed >= 5f)
-                {
-                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyFastMaterial();
-                }
-                else
-                {
-                    rend.sharedMaterial = DefaultMaterialsGenerator.GetEnemyNormalMaterial();
-                }
-            }
+            GameObject enemyObj = SpawnEnemyAtPosition(enemyData, spawnPos, EnemyBehaviorState.Hungry, isBoss);
+            if (enemyObj == null) return null;
+            enemyObj.name = isBoss ? $"BOSS_{enemyData.enemyName}" : $"Enemy_{enemyData.enemyName}";
 
             Debug.Log($"[WaveManager] Spawned enemy: {enemyObj.name} at {spawnPos} (Radius: {spawnRadius})");
 

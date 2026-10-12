@@ -16,7 +16,7 @@ namespace FoodSurvivors.Data
         AreaBonus,          // Размер атак
         XpBonus,            // Опыт
         MagnetBonus,        // Магнит
-        HealthBonus         // Сохранено для обратной совместимости ассетов
+        HealthBonus         // Сохранено для обратной совместимости
     }
 
     [Serializable]
@@ -33,6 +33,10 @@ namespace FoodSurvivors.Data
         [TextArea] public string description;
         public PassiveType passiveType;
         public Color passiveColor = Color.white;
+
+        [Header("Roster Settings")]
+        public bool isEnabledInRoster = true; // Если false — пассивка не выпадет в игре
+
         public List<PassiveLevelData> levels = new List<PassiveLevelData>();
 
         [Header("Media Assets")]

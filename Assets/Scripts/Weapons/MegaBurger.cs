@@ -1,5 +1,7 @@
 using UnityEngine;
 using FoodSurvivors.Data;
+using FoodSurvivors.Enemies;
+using FoodSurvivors.Core;
 
 namespace FoodSurvivors.Weapons
 {
@@ -8,14 +10,10 @@ namespace FoodSurvivors.Weapons
         protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
-            Vector3 targetPos = FindDropTarget(10f * GetArea(stats.areaScale));
+            Vector3 targetPos = FindDropTarget(14f * GetArea(stats.areaScale));
 
-            int count = Mathf.Max(1, stats.projectileCount);
-            for (int i = 0; i < count; i++)
-            {
-                Vector3 offset = (i == 0) ? Vector3.zero : new Vector3(Random.Range(-3f, 3f), 0f, Random.Range(-3f, 3f));
-                SpawnBurger(targetPos + offset, stats);
-            }
+            // Падает СТРОГО ОДИН бургер
+            SpawnSingleMegaBurger(targetPos, stats);
         }
 
         private Vector3 FindDropTarget(float maxRadius)
@@ -31,26 +29,51 @@ namespace FoodSurvivors.Weapons
             return transform.position + new Vector3(circle.x, 0f, circle.y);
         }
 
-        private void SpawnBurger(Vector3 targetPos, WeaponLevelData stats)
+        private void SpawnSingleMegaBurger(Vector3 targetPos, WeaponLevelData stats)
         {
-            GameObject burgerObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            burgerObj.name = "MegaBurgerSlam";
-            burgerObj.transform.position = new Vector3(targetPos.x, 14f, targetPos.z);
+            Vector3 dropSpawnPos = new Vector3(targetPos.x, transform.position.y + 14f, targetPos.z);
+            GameObject burgerObj = null;
 
-            float burgerScale = 2.5f * GetArea(stats.areaScale);
-            burgerObj.transform.localScale = new Vector3(burgerScale, 0.8f, burgerScale);
-
-            Renderer rend = burgerObj.GetComponent<Renderer>();
-            if (rend != null)
+            // Авто-поиск префаба бургера, если ссылка случайно слетела
+            if (weaponData != null && weaponData.weaponPrefab == null)
             {
-                rend.material.color = weaponData != null ? weaponData.weaponColor : new Color(0.8f, 0.5f, 0.2f);
+#if UNITY_EDITOR
+                string[] guids = UnityEditor.AssetDatabase.FindAssets("Burger t:GameObject", new[] { "Assets/Prefabs/Weapons", "Assets/PolygonShops/Prefabs/Food" });
+                if (guids.Length > 0)
+                {
+                    weaponData.weaponPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]));
+                    UnityEditor.EditorUtility.SetDirty(weaponData);
+                }
+#endif
             }
 
-            Collider col = burgerObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
+            // Создаем настоящую 3D-модель бургера
+            if (weaponData != null && weaponData.weaponPrefab != null)
+            {
+                burgerObj = Instantiate(weaponData.weaponPrefab, dropSpawnPos, Quaternion.identity);
+            }
+            else
+            {
+                // Резерв с аппетитным цветом бургера, а не белым!
+                burgerObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                burgerObj.transform.position = dropSpawnPos;
+                Renderer rend = burgerObj.GetComponent<Renderer>();
+                if (rend != null) rend.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial("M_Burger", new Color(0.85f, 0.5f, 0.2f));
+            }
+
+            // Считываем точный масштаб из префаба
+            Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null)
+                ? weaponData.weaponPrefab.transform.localScale
+                : Vector3.one * 3f;
+
+            burgerObj.transform.localScale = prefabScale * GetArea(stats.areaScale);
+
+            // Радиус взрыва равен размеру самого бургера
+            float burgerRadius = Mathf.Max(burgerObj.transform.localScale.x, burgerObj.transform.localScale.z) / 2f;
+            float impactRadius = Mathf.Max(2.5f, burgerRadius * 1.3f);
 
             MegaBurgerDrop drop = burgerObj.AddComponent<MegaBurgerDrop>();
-            drop.Setup(targetPos, stats.speed > 0 ? stats.speed * 2.5f : 24f, GetDamage(stats.damage * 2.2f), 3.5f * GetArea(stats.areaScale));
+            drop.Setup(targetPos, stats.speed > 0 ? stats.speed * 2.5f : 24f, GetDamage(stats.damage * 2.5f), impactRadius, isBossWeapon);
         }
     }
 
@@ -60,53 +83,53 @@ namespace FoodSurvivors.Weapons
         private float fallSpeed;
         private float damage;
         private float impactRadius;
+        private bool isBoss;
+        private bool hasLanded = false;
 
-        public void Setup(Vector3 target, float speed, float dmg, float radius)
+        public void Setup(Vector3 target, float speed, float dmg, float radius, bool bossSource)
         {
-            groundPos = new Vector3(target.x, 0.4f, target.z);
+            groundPos = new Vector3(target.x, target.y + 0.1f, target.z);
             fallSpeed = speed;
             damage = dmg;
             impactRadius = radius;
+            isBoss = bossSource;
         }
 
         private void Update()
         {
+            if (hasLanded) return;
+
             transform.position = Vector3.MoveTowards(transform.position, groundPos, fallSpeed * Time.deltaTime);
 
-            if (Vector3.Distance(transform.position, groundPos) <= 0.2f)
+            if (Vector3.Distance(transform.position, groundPos) <= 0.3f)
             {
-                Impact();
+                TriggerImpact();
             }
         }
 
-        private void Impact()
+        private void TriggerImpact()
         {
-            GameObject shockwave = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            shockwave.name = "BurgerShockwave";
-            shockwave.transform.position = groundPos;
-            shockwave.transform.localScale = new Vector3(impactRadius * 2f, 0.05f, impactRadius * 2f);
+            hasLanded = true;
+            transform.position = groundPos;
 
-            Renderer r = shockwave.GetComponent<Renderer>();
-            if (r != null)
-            {
-                Color c = new Color(1f, 0.6f, 0.1f, 0.7f);
-                r.material.color = c;
-            }
-
-            Collider cCol = shockwave.GetComponent<Collider>();
-            if (cCol != null) cCol.isTrigger = true;
-
+            // НИКАКИХ БЕЛЫХ ЦИЛИНДРОВ!
+            // Наносим сокрушительный сплеш-урон всем мобам прямо под бургером
             Collider[] hits = Physics.OverlapSphere(groundPos, impactRadius);
             foreach (var h in hits)
             {
                 if (h.CompareTag("Enemy"))
                 {
-                    h.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
+                    EnemyController ec = h.GetComponent<EnemyController>();
+                    if (ec != null)
+                    {
+                        if (isBoss) ec.TakeDamageFromBoss(damage);
+                        else ec.TakeDamage(damage);
+                    }
                 }
             }
 
-            Destroy(shockwave, 0.5f);
-            Destroy(gameObject, 0.4f);
+            // Бургер сочно впечатывается в асфальт и исчезает через долю секунды
+            Destroy(gameObject, 0.25f);
         }
     }
 }

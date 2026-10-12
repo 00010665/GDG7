@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07bed570889c8684b9410478d7f339f5, type: 3}
   m_Name: SushiSet
   m_EditorClassIdentifier: Assembly-CSharp::FoodSurvivors.Data.WeaponData
-  weaponName: "\u0421\u0443\u0448\u0438-\u0441\u0435\u0442"
+  weaponName: "\u041A\u043E\u0440-\u0441\u0435\u0442 \u0438\u0437 \u0440\u0451\u0431\u0435\u0440"
   description: "\u0410\u0442\u0430\u043A\u0430 \u0432\u043E \u0432\u0441\u0435 4
     \u0441\u0442\u043E\u0440\u043E\u043D\u044B \u043A\u0440\u0435\u0441\u0442\u043E\u043C"
   weaponColor: {r: 0.1, g: 0.8, b: 0.4, a: 1}
-  weaponPrefab: {fileID: 0}
+  weaponPrefab: {fileID: 1142893756581498, guid: 2c6356c37afad4c4fa5466e160f019fd, type: 3}
+  weaponType: 4
+  isEnabledInRoster: 1
   levels:
   - description: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C 1: \u0423\u0440\u043E\u043D
       14, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 2,0\u0441,

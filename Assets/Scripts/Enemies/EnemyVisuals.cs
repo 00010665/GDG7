@@ -17,20 +17,16 @@ namespace FoodSurvivors.Enemies
         {
             enemyController = GetComponent<EnemyController>();
 
-            if (spriteRenderer == null)
+            if (spriteRenderer == null && GetComponentInChildren<SkinnedMeshRenderer>() == null)
             {
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-            }
-
-            if (spriteRenderer == null)
-            {
-                Transform visualRoot = transform.Find("Visual");
-                GameObject visualObj = visualRoot != null ? visualRoot.gameObject : new GameObject("Visual");
-                visualObj.transform.SetParent(transform, false);
-                spriteRenderer = visualObj.GetComponent<SpriteRenderer>();
                 if (spriteRenderer == null)
                 {
-                    spriteRenderer = visualObj.AddComponent<SpriteRenderer>();
+                    Transform visualRoot = transform.Find("Visual");
+                    GameObject visualObj = visualRoot != null ? visualRoot.gameObject : new GameObject("Visual");
+                    visualObj.transform.SetParent(transform, false);
+                    spriteRenderer = visualObj.GetComponent<SpriteRenderer>();
+                    if (spriteRenderer == null) spriteRenderer = visualObj.AddComponent<SpriteRenderer>();
                 }
             }
 

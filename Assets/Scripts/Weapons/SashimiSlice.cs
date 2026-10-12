@@ -68,7 +68,15 @@ namespace FoodSurvivors.Weapons
                     }
                 }
 
-                bladeObj.transform.localScale = new Vector3(0.3f, 0.1f, 0.8f) * stats.areaScale;
+                Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null)
+    ? weaponData.weaponPrefab.transform.localScale
+    : new Vector3(0.4f, 0.15f, 1f);
+
+                bladeObj.transform.localScale = prefabScale * stats.areaScale;
+
+                // Радиус орбиты автоматически подстраивается под размер клинков!
+                float bladeLength = Mathf.Max(prefabScale.x, prefabScale.z);
+                float radius = (2.2f + bladeLength) * stats.areaScale;
 
                 Collider col = bladeObj.GetComponent<Collider>();
                 if (col != null) col.isTrigger = true;

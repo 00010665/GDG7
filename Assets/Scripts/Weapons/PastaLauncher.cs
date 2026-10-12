@@ -68,7 +68,8 @@ namespace FoodSurvivors.Weapons
                 projObj.name = "PastaProjectile";
                 projObj.transform.position = transform.position + Vector3.up * 0.5f;
                 projObj.transform.rotation = Quaternion.LookRotation(direction);
-                projObj.transform.localScale = Vector3.one * (0.4f * stats.areaScale);
+                Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null) ? weaponData.weaponPrefab.transform.localScale : Vector3.one;
+                projObj.transform.localScale = prefabScale * (0.8f * stats.areaScale);
 
                 Renderer rend = projObj.GetComponent<Renderer>();
                 if (rend != null && weaponData != null)

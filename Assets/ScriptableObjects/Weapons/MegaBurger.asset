@@ -16,7 +16,9 @@ MonoBehaviour:
   description: "\u041F\u0430\u0434\u0435\u043D\u0438\u0435 \u043A\u043E\u043B\u043E\u0441\u0441\u0430\u043B\u044C\u043D\u043E\u0433\u043E
     \u0431\u0443\u0440\u0433\u0435\u0440\u0430 \u0441\u0432\u0435\u0440\u0445\u0443"
   weaponColor: {r: 0.8, g: 0.45, b: 0.15, a: 1}
-  weaponPrefab: {fileID: 0}
+  weaponPrefab: {fileID: 1255860985521506, guid: ac55d07dd2858ad478c12ef0dc4d4ac0, type: 3}
+  weaponType: 8
+  isEnabledInRoster: 1
   levels:
   - description: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C 1: \u0423\u0440\u043E\u043D
       45, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 4,5\u0441,

@@ -3,6 +3,7 @@ using UnityEngine;
 using FoodSurvivors.Boss;
 using FoodSurvivors.Player;
 using FoodSurvivors.UI;
+using FoodSurvivors.Data;
 
 namespace FoodSurvivors.Core
 {
@@ -172,15 +173,25 @@ namespace FoodSurvivors.Core
 
         private void CreateBossInstance(Vector3 pos, BossArchetype archetype, float dmgMult)
         {
-            GameObject bossObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            CharacterPrefabRegistry registry = Resources.Load<CharacterPrefabRegistry>("FoodSurvivors/CharacterPrefabRegistry");
+            GameObject bossPrefab = registry != null ? registry.GetBossPrefab(archetype) : null;
+            GameObject bossObj = bossPrefab != null
+                ? Instantiate(bossPrefab, pos, Quaternion.identity)
+                : GameObject.CreatePrimitive(PrimitiveType.Capsule);
             bossObj.name = $"RivalChef_{archetype}";
             bossObj.transform.position = pos;
-            bossObj.transform.localScale = Vector3.one * 1.8f;
 
-            Renderer r = bossObj.GetComponent<Renderer>();
-            if (r != null) r.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial("M_Rival", new Color(0.95f, 0.1f, 0.85f));
+            if (bossPrefab == null)
+            {
+                bossObj.transform.localScale = Vector3.one * 1.8f;
+                Renderer r = bossObj.GetComponent<Renderer>();
+                if (r != null) r.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial("M_Rival", new Color(0.95f, 0.1f, 0.85f));
+            }
 
-            activeBoss = bossObj.AddComponent<RivalBossController>();
+            if (bossObj.GetComponent<Collider>() == null) bossObj.AddComponent<CapsuleCollider>();
+
+            activeBoss = bossObj.GetComponent<RivalBossController>();
+            if (activeBoss == null) activeBoss = bossObj.AddComponent<RivalBossController>();
             activeBoss.InitializeBoss(archetype, dmgMult, bossLevelOffset);
         }
 
@@ -199,6 +210,9 @@ namespace FoodSurvivors.Core
             {
                 GameOverUI.Instance.ShowGameOver(isVictory);
             }
+
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) p.GetComponent<PlayerController>()?.SaveCurrentBuildForNextBoss();
         }
     }
 }

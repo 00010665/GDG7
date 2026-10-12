@@ -15,8 +15,6 @@ namespace FoodSurvivors.UI
         public string description;
         public string typeLabel;
         public Color optionColor;
-        public WeaponData weaponData;
-        public PassiveData passiveData;
         public System.Action onSelect;
     }
 
@@ -34,7 +32,7 @@ namespace FoodSurvivors.UI
         public TextMeshProUGUI[] cardTypeTexts;
         public Image[] cardColorPreviews;
 
-        [Header("Available Data Pools (Optional)")]
+        [Header("Real Assets Pool")]
         public List<WeaponData> weaponPool = new List<WeaponData>();
         public List<PassiveData> passivePool = new List<PassiveData>();
 
@@ -52,20 +50,50 @@ namespace FoodSurvivors.UI
 
         private void Start()
         {
-            if (levelUpPanel != null)
+            if (levelUpPanel != null) levelUpPanel.SetActive(false);
+            LoadRealAssets();
+        }
+
+        private void LoadRealAssets()
+        {
+            weaponPool.Clear();
+            passivePool.Clear();
+
+#if UNITY_EDITOR
+            string[] wGuids = UnityEditor.AssetDatabase.FindAssets("t:WeaponData", new[] { "Assets/ScriptableObjects/Weapons" });
+            foreach (var g in wGuids)
             {
-                levelUpPanel.SetActive(false);
+                var w = UnityEditor.AssetDatabase.LoadAssetAtPath<WeaponData>(UnityEditor.AssetDatabase.GUIDToAssetPath(g));
+                if (w != null && !weaponPool.Contains(w)) weaponPool.Add(w);
+            }
+
+            string[] pGuids = UnityEditor.AssetDatabase.FindAssets("t:PassiveData", new[] { "Assets/ScriptableObjects/Passives" });
+            foreach (var g in pGuids)
+            {
+                var p = UnityEditor.AssetDatabase.LoadAssetAtPath<PassiveData>(UnityEditor.AssetDatabase.GUIDToAssetPath(g));
+                if (p != null && !passivePool.Contains(p)) passivePool.Add(p);
+            }
+#endif
+            // Резерв через Resources
+            if (weaponPool.Count == 0)
+            {
+                var loadedW = Resources.LoadAll<WeaponData>("Weapons");
+                weaponPool.AddRange(loadedW);
+            }
+            if (passivePool.Count == 0)
+            {
+                var loadedP = Resources.LoadAll<PassiveData>("Passives");
+                passivePool.AddRange(loadedP);
             }
         }
 
         public void ShowLevelUpWindow()
         {
-            if (levelUpPanel != null)
-            {
-                levelUpPanel.SetActive(true);
-            }
+            if (weaponPool.Count == 0 || passivePool.Count == 0) LoadRealAssets();
 
-            Debug.Log("[LevelUpUI] Opening Level-Up window. Pausing game.");
+            if (levelUpPanel != null) levelUpPanel.SetActive(true);
+            Time.timeScale = 0f;
+
             GenerateUpgradeOptions();
             DisplayOptions();
         }
@@ -80,91 +108,66 @@ namespace FoodSurvivors.UI
 
             List<UpgradeOption> pool = new List<UpgradeOption>();
 
-            // --- 9 Блюд ---
-            AddWeaponOption(pool, wm, "Паста-пушка", "Запускает пасту в ближайших туристов", Color.yellow);
-            AddWeaponOption(pool, wm, "Сашими-клинки", "Клинки вращаются вокруг повара", Color.cyan);
-            AddWeaponOption(pool, wm, "Острое Сальса-пятно", "AOE сальса под ногами", Color.red);
-            AddWeaponOption(pool, wm, "Горячий Суп", "Взрывной навесной снаряд по площади", new Color(1f, 0.5f, 0.1f));
-            AddWeaponOption(pool, wm, "Суши-сет", "Атака во все 4 стороны крестом", new Color(0.1f, 0.8f, 0.4f));
-            AddWeaponOption(pool, wm, "Тако-бросок", "Рикошет по цепочке туристов", new Color(0.9f, 0.7f, 0.2f));
-            AddWeaponOption(pool, wm, "Нож для Пиццы", "Пробивающий всех насквозь диск", new Color(0.85f, 0.85f, 0.95f));
-            AddWeaponOption(pool, wm, "Чайник с Кипятком", "Непрерывная струя кипятка перед собой", new Color(0.3f, 0.7f, 1f));
-            AddWeaponOption(pool, wm, "Мега-Бургер", "Падение гигантского бургера сверху", new Color(0.8f, 0.45f, 0.15f));
+            // --- ДОБАВЛЯЕМ ТОЛЬКО НАСТОЯЩИЕ БЛЮДА С ПРЕФАБАМИ! ---
+            foreach (var wData in weaponPool)
+            {
+                if (wData == null || !wData.isEnabledInRoster) continue;
 
-            // --- 9 Пассивок (Новая Стамина-Мета) ---
-            AddPassiveOption(pool, pm, "Второе Дыхание", "+5 к Регенерации Стамины в секунду", new Color(0.2f, 0.9f, 0.4f), PassiveType.StaminaRegenBonus, 5f);
-            AddPassiveOption(pool, pm, "Силовой Напор", "Увеличивает плоский бонус урона от запаса стамины", new Color(1f, 0.5f, 0.1f), PassiveType.StaminaDamageBonus, 3f);
-            AddPassiveOption(pool, pm, "Легкая Поступь", "-5 к затратам Стамины на каждый рывок", new Color(0.3f, 0.8f, 1f), PassiveType.DashCostBonus, 4f);
-            AddPassiveOption(pool, pm, "Сырная броня", "+2 к Защите стамины от ударов мобов", Color.yellow, PassiveType.ArmorBonus, 2f);
-            AddPassiveOption(pool, pm, "Васаби-ускорение", "+1.2 к Скорости перемещения", new Color(0.4f, 0.9f, 0.3f), PassiveType.SpeedBonus, 1.2f);
-            AddPassiveOption(pool, pm, "Острый перчик", "+15% к Зоне поражения и +5% к Урону", Color.red, PassiveType.AreaBonus, 0.15f);
-            AddPassiveOption(pool, pm, "Быстрая Подача", "-8% к Перезарядке атак блюд", new Color(0.9f, 0.5f, 0.9f), PassiveType.CooldownReduction, 0.08f);
-            AddPassiveOption(pool, pm, "Большая Порция", "+15% к Базовому урону всех блюд", new Color(1f, 0.4f, 0.2f), PassiveType.DamageBonus, 0.15f);
-            AddPassiveOption(pool, pm, "Чаевые", "+20% к Получаемому опыту", Color.yellow, PassiveType.XpBonus, 0.20f);
+                int curLvl = wm != null ? wm.GetWeaponLevel(wData) : 0;
+                int maxLvl = wData.levels != null ? wData.levels.Count : 5;
+                if (curLvl >= maxLvl) continue;
 
+                WeaponData capturedWeapon = wData;
+                pool.Add(new UpgradeOption
+                {
+                    title = $"{capturedWeapon.weaponName} (Ур. {curLvl + 1}/{maxLvl})",
+                    description = capturedWeapon.description,
+                    typeLabel = "[Блюдо]",
+                    optionColor = capturedWeapon.weaponColor,
+                    onSelect = () =>
+                    {
+                        if (wm != null)
+                        {
+                            // ПЕРЕДАЕМ НАСТОЯЩИЙ АССЕТ С ПРЕФАБОМ!
+                            wm.AddWeapon(capturedWeapon);
+                        }
+                    }
+                });
+            }
+
+            // --- ДОБАВЛЯЕМ ТОЛЬКО НАСТОЯЩИЕ ПАССИВКИ ---
+            foreach (var pData in passivePool)
+            {
+                if (pData == null || !pData.isEnabledInRoster) continue;
+
+                int curLvl = pm != null ? pm.GetPassiveLevel(pData) : 0;
+                int maxLvl = pData.levels != null ? pData.levels.Count : 5;
+                if (curLvl >= maxLvl) continue;
+
+                PassiveData capturedPassive = pData;
+                pool.Add(new UpgradeOption
+                {
+                    title = $"{capturedPassive.passiveName} (Ур. {curLvl + 1}/{maxLvl})",
+                    description = capturedPassive.description,
+                    typeLabel = "[Талант]",
+                    optionColor = capturedPassive.passiveColor,
+                    onSelect = () =>
+                    {
+                        if (pm != null)
+                        {
+                            pm.AddOrUpgradePassive(capturedPassive);
+                        }
+                    }
+                });
+            }
+
+            // Выбираем 3 уникальные случайные карточки
             for (int i = 0; i < 3 && pool.Count > 0; i++)
             {
-                int randomIndex = Random.Range(0, pool.Count);
-                currentOptions.Add(pool[randomIndex]);
-                pool.RemoveAt(randomIndex);
+                int rIdx = Random.Range(0, pool.Count);
+                currentOptions.Add(pool[rIdx]);
+                pool.RemoveAt(rIdx);
             }
-        }
-
-        private void AddWeaponOption(List<UpgradeOption> pool, WeaponManager wm, string weaponName, string description, Color color)
-        {
-            int lvl = 1;
-            if (wm != null)
-            {
-                var existing = wm.activeWeapons.Find(w => w.weaponData != null && w.weaponData.weaponName == weaponName);
-                if (existing != null) lvl = existing.currentLevel + 1;
-            }
-
-            pool.Add(new UpgradeOption
-            {
-                title = $"{weaponName} (Ур. {lvl})",
-                description = description,
-                typeLabel = "[Блюдо]",
-                optionColor = color,
-                onSelect = () =>
-                {
-                    if (wm != null)
-                    {
-                        WeaponData data = ScriptableObject.CreateInstance<WeaponData>();
-                        data.weaponName = weaponName;
-                        data.weaponColor = color;
-                        wm.AddWeapon(data);
-                    }
-                }
-            });
-        }
-
-        private void AddPassiveOption(List<UpgradeOption> pool, PassiveManager pm, string passiveName, string description, Color color, PassiveType type, float value)
-        {
-            int lvl = 1;
-            if (pm != null)
-            {
-                var existing = pm.activePassives.Find(p => p != null && p.passiveName == passiveName);
-                if (existing != null && pm.passiveLevels.ContainsKey(existing)) lvl = pm.passiveLevels[existing] + 1;
-            }
-
-            pool.Add(new UpgradeOption
-            {
-                title = $"{passiveName} (Ур. {lvl})",
-                description = description,
-                typeLabel = "[Пассивка]",
-                optionColor = color,
-                onSelect = () =>
-                {
-                    if (pm != null)
-                    {
-                        PassiveData data = ScriptableObject.CreateInstance<PassiveData>();
-                        data.passiveName = passiveName;
-                        data.passiveType = type;
-                        data.passiveColor = color;
-                        pm.AddOrUpgradePassive(data);
-                    }
-                }
-            });
         }
 
         private void DisplayOptions()
@@ -192,9 +195,9 @@ namespace FoodSurvivors.UI
                     if (cardColorPreviews != null && i < cardColorPreviews.Length && cardColorPreviews[i] != null)
                         cardColorPreviews[i].color = opt.optionColor;
 
-                    int optionIndex = i;
+                    int idx = i;
                     cardButtons[i].onClick.RemoveAllListeners();
-                    cardButtons[i].onClick.AddListener(() => SelectOption(optionIndex));
+                    cardButtons[i].onClick.AddListener(() => SelectOption(idx));
                 }
                 else
                 {
@@ -207,20 +210,14 @@ namespace FoodSurvivors.UI
         {
             if (index >= 0 && index < currentOptions.Count)
             {
-                Debug.Log($"[LevelUpUI] Selected Option: {currentOptions[index].title}");
                 currentOptions[index].onSelect?.Invoke();
             }
-
             CloseLevelUpWindow();
         }
 
         public void CloseLevelUpWindow()
         {
-            if (levelUpPanel != null)
-            {
-                levelUpPanel.SetActive(false);
-            }
-
+            if (levelUpPanel != null) levelUpPanel.SetActive(false);
             Time.timeScale = 1f;
         }
     }

@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using FoodSurvivors.Data;
+using FoodSurvivors.Enemies;
 
 namespace FoodSurvivors.Weapons
 {
@@ -9,7 +9,12 @@ namespace FoodSurvivors.Weapons
         protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
-            Vector3 spawnPos = new Vector3(transform.position.x, 0.02f, transform.position.z);
+            Vector3 spawnPos = new Vector3(transform.position.x, transform.position.y + 0.05f, transform.position.z);
+
+            // Считываем базовый размер из префаба!
+            Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null)
+                ? weaponData.weaponPrefab.transform.localScale
+                : new Vector3(3.5f, 0.08f, 3.5f);
 
             GameObject puddleObj;
             if (weaponData != null && weaponData.weaponPrefab != null)
@@ -19,34 +24,20 @@ namespace FoodSurvivors.Weapons
             else
             {
                 puddleObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                puddleObj.name = "SalsaPuddle";
                 puddleObj.transform.position = spawnPos;
-
-                float diameter = 3f * stats.areaScale;
-                puddleObj.transform.localScale = new Vector3(diameter, 0.02f, diameter);
-
                 Renderer rend = puddleObj.GetComponent<Renderer>();
-                if (rend != null && weaponData != null)
-                {
-                    Color c = weaponData.weaponColor;
-                    c.a = 0.6f;
-                    rend.material.color = c;
-                }
+                if (rend != null) rend.material.color = new Color(0.9f, 0.1f, 0.1f, 0.6f);
             }
 
-            Collider col = puddleObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
+            // Сохраняем масштаб префаба!
+            puddleObj.transform.localScale = prefabScale * GetArea(stats.areaScale);
 
-            Rigidbody rb = puddleObj.GetComponent<Rigidbody>();
-            if (rb == null)
-            {
-                rb = puddleObj.AddComponent<Rigidbody>();
-                rb.isKinematic = true;
-                rb.useGravity = false;
-            }
+            // Радиус урона СТРОГО соответствует ширине префаба!
+            float maxHorizontalScale = Mathf.Max(prefabScale.x, prefabScale.z);
+            float damageRadius = (maxHorizontalScale / 2f) * GetArea(stats.areaScale);
 
             SalsaPuddleZone zone = puddleObj.AddComponent<SalsaPuddleZone>();
-            zone.Setup(stats.damage, stats.duration, 0.5f);
+            zone.Setup(GetDamage(stats.damage), stats.duration > 0 ? stats.duration : 3.5f, 0.4f, damageRadius, isBossWeapon);
         }
     }
 
@@ -55,15 +46,17 @@ namespace FoodSurvivors.Weapons
         private float damage;
         private float duration;
         private float tickInterval;
+        private float radius;
+        private bool isBoss;
+        private float tickTimer = 0f;
 
-        private HashSet<GameObject> enemiesInZone = new HashSet<GameObject>();
-        private float tickTimer;
-
-        public void Setup(float dmg, float dur, float interval)
+        public void Setup(float dmg, float dur, float interval, float rad, bool bossSource)
         {
             damage = dmg;
-            duration = dur > 0 ? dur : 3f;
-            tickInterval = interval > 0 ? interval : 0.5f;
+            duration = dur;
+            tickInterval = interval;
+            radius = rad;
+            isBoss = bossSource;
             tickTimer = 0f;
         }
 
@@ -75,7 +68,7 @@ namespace FoodSurvivors.Weapons
             if (tickTimer <= 0f)
             {
                 tickTimer = tickInterval;
-                ApplyDamageToAllInZone();
+                ApplyDamageInZone();
             }
 
             if (duration <= 0f)
@@ -84,38 +77,21 @@ namespace FoodSurvivors.Weapons
             }
         }
 
-        private void ApplyDamageToAllInZone()
+        private void ApplyDamageInZone()
         {
-            List<GameObject> toRemove = new List<GameObject>();
-            foreach (var enemy in enemiesInZone)
+            // Наносим урон всем мобам строго в радиусе размера префаба!
+            Collider[] hits = Physics.OverlapSphere(transform.position, radius);
+            foreach (var h in hits)
             {
-                if (enemy == null)
+                if (h.CompareTag("Enemy"))
                 {
-                    toRemove.Add(enemy);
-                    continue;
+                    EnemyController ec = h.GetComponent<EnemyController>();
+                    if (ec != null)
+                    {
+                        if (isBoss) ec.TakeDamageFromBoss(damage);
+                        else ec.TakeDamage(damage);
+                    }
                 }
-                enemy.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
-            }
-
-            foreach (var r in toRemove)
-            {
-                enemiesInZone.Remove(r);
-            }
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.CompareTag("Enemy"))
-            {
-                enemiesInZone.Add(other.gameObject);
-            }
-        }
-
-        private void OnTriggerExit(Collider other)
-        {
-            if (other.CompareTag("Enemy"))
-            {
-                enemiesInZone.Remove(other.gameObject);
             }
         }
     }

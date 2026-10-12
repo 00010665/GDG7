@@ -12,11 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07bed570889c8684b9410478d7f339f5, type: 3}
   m_Name: SashimiSlice
   m_EditorClassIdentifier: Assembly-CSharp::FoodSurvivors.Data.WeaponData
-  weaponName: "\u0421\u0430\u0448\u0438\u043C\u0438-\u043A\u043B\u0438\u043D\u043A\u0438"
+  weaponName: "\u0421\u0443\u0448\u0438 \u0431\u0435\u0437 \u0445\u0440\u044E\u0448\u0438"
   description: "\u0412\u0440\u0430\u0449\u0430\u044E\u0449\u0438\u0435\u0441\u044F
-    \u043A\u043B\u0438\u043D\u043A\u0438 \u0432\u043E\u043A\u0440\u0443\u0433 \u043F\u043E\u0432\u0430\u0440\u0430"
+    \u0441\u0443\u0448\u0438 \u0432\u043E\u043A\u0440\u0443\u0433 \u043F\u043E\u0432\u0430\u0440\u0430"
   weaponColor: {r: 0, g: 1, b: 1, a: 1}
-  weaponPrefab: {fileID: 0}
+  weaponPrefab: {fileID: 1916478071726576, guid: 5d97e4f53683c854c97da46b8089db72, type: 3}
+  weaponType: 1
+  isEnabledInRoster: 1
   levels:
   - description: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C 1: \u0423\u0440\u043E\u043D
       8, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 1,0\u0441,

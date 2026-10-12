@@ -7,6 +7,9 @@ namespace FoodSurvivors.Weapons
 {
     public abstract class WeaponBase : MonoBehaviour
     {
+        [Header("Ownership")]
+        public bool isBossWeapon = false;
+
         [Header("Weapon Configuration")]
         public WeaponData weaponData;
         public int currentLevel = 1;

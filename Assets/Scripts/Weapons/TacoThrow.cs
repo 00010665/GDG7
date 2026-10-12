@@ -18,22 +18,30 @@ namespace FoodSurvivors.Weapons
                 direction.y = 0f;
             }
 
-            GameObject tacoObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            tacoObj.name = "TacoProjectile";
-            tacoObj.transform.position = transform.position + Vector3.up * 0.5f;
-            tacoObj.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            tacoObj.transform.localScale = new Vector3(0.5f, 0.1f, 0.5f) * GetArea(stats.areaScale);
+            GameObject tacoObj;
+            Quaternion rot = Quaternion.Euler(90f, 0f, 0f);
 
-            Renderer rend = tacoObj.GetComponent<Renderer>();
-            if (rend != null)
+            if (weaponData != null && weaponData.weaponPrefab != null)
             {
-                rend.material.color = weaponData != null ? weaponData.weaponColor : new Color(0.9f, 0.7f, 0.1f);
+                tacoObj = Instantiate(weaponData.weaponPrefab, transform.position + Vector3.up * 0.5f, rot);
+            }
+            else
+            {
+                tacoObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                tacoObj.name = "TacoProjectile";
+                tacoObj.transform.position = transform.position + Vector3.up * 0.5f;
+                tacoObj.transform.rotation = rot;
             }
 
-            Collider col = tacoObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
+            Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null) ? weaponData.weaponPrefab.transform.localScale : Vector3.one;
+            tacoObj.transform.localScale = prefabScale * GetArea(stats.areaScale);
 
-            Rigidbody rb = tacoObj.AddComponent<Rigidbody>();
+            Collider col = tacoObj.GetComponent<Collider>();
+            if (col == null) col = tacoObj.AddComponent<SphereCollider>();
+            col.isTrigger = true;
+
+            Rigidbody rb = tacoObj.GetComponent<Rigidbody>();
+            if (rb == null) rb = tacoObj.AddComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.useGravity = false;
 

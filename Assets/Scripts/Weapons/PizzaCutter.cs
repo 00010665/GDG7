@@ -27,22 +27,30 @@ namespace FoodSurvivors.Weapons
 
         private void SpawnCutter(Vector3 direction, WeaponLevelData stats)
         {
-            GameObject cutterObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            cutterObj.name = "PizzaCutterBlade";
-            cutterObj.transform.position = transform.position + Vector3.up * 0.5f;
-            cutterObj.transform.rotation = Quaternion.LookRotation(direction) * Quaternion.Euler(90f, 0f, 0f);
-            cutterObj.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f) * GetArea(stats.areaScale);
+            GameObject cutterObj;
+            Quaternion rot = Quaternion.LookRotation(direction) * Quaternion.Euler(90f, 0f, 0f);
 
-            Renderer rend = cutterObj.GetComponent<Renderer>();
-            if (rend != null)
+            if (weaponData != null && weaponData.weaponPrefab != null)
             {
-                rend.material.color = weaponData != null ? weaponData.weaponColor : new Color(0.85f, 0.85f, 0.9f);
+                cutterObj = Instantiate(weaponData.weaponPrefab, transform.position + Vector3.up * 0.5f, rot);
+            }
+            else
+            {
+                cutterObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                cutterObj.name = "PizzaCutterBlade";
+                cutterObj.transform.position = transform.position + Vector3.up * 0.5f;
+                cutterObj.transform.rotation = rot;
             }
 
-            Collider col = cutterObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
+            Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null) ? weaponData.weaponPrefab.transform.localScale : Vector3.one;
+            cutterObj.transform.localScale = prefabScale * GetArea(stats.areaScale);
 
-            Rigidbody rb = cutterObj.AddComponent<Rigidbody>();
+            Collider col = cutterObj.GetComponent<Collider>();
+            if (col == null) col = cutterObj.AddComponent<SphereCollider>();
+            col.isTrigger = true;
+
+            Rigidbody rb = cutterObj.GetComponent<Rigidbody>();
+            if (rb == null) rb = cutterObj.AddComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.useGravity = false;
 

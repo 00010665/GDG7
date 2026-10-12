@@ -32,19 +32,23 @@ namespace FoodSurvivors.Weapons
 
         private void SpawnSoupProjectile(Vector3 targetPos, WeaponLevelData stats)
         {
-            GameObject soupObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            soupObj.name = "SoupProjectile";
-            soupObj.transform.position = transform.position + Vector3.up * 1f;
-            soupObj.transform.localScale = Vector3.one * (0.6f * GetArea(stats.areaScale));
-
-            Renderer rend = soupObj.GetComponent<Renderer>();
-            if (rend != null)
+            GameObject soupObj;
+            if (weaponData != null && weaponData.weaponPrefab != null)
             {
-                rend.material.color = weaponData != null ? weaponData.weaponColor : new Color(1f, 0.5f, 0f);
+                soupObj = Instantiate(weaponData.weaponPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
+            }
+            else
+            {
+                soupObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                soupObj.name = "SoupProjectile";
+                soupObj.transform.position = transform.position + Vector3.up * 1f;
             }
 
+            soupObj.transform.localScale = Vector3.one * (0.8f * GetArea(stats.areaScale));
+
             Collider col = soupObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
+            if (col == null) col = soupObj.AddComponent<SphereCollider>();
+            col.isTrigger = true;
 
             SoupLobProjectile lob = soupObj.AddComponent<SoupLobProjectile>();
             lob.Setup(transform.position, targetPos, stats.speed > 0 ? stats.speed : 10f, GetDamage(stats.damage), 2.5f * GetArea(stats.areaScale), weaponData != null ? weaponData.weaponColor : Color.yellow);

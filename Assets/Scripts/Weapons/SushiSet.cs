@@ -41,22 +41,33 @@ namespace FoodSurvivors.Weapons
 
         private void SpawnSushiProjectile(Vector3 direction, WeaponLevelData stats)
         {
-            GameObject sushiObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            sushiObj.name = "SushiProjectile";
-            sushiObj.transform.position = transform.position + Vector3.up * 0.5f;
-            sushiObj.transform.rotation = Quaternion.LookRotation(direction);
-            sushiObj.transform.localScale = new Vector3(0.5f, 0.25f, 0.7f) * GetArea(stats.areaScale);
+            GameObject sushiObj;
+            Quaternion rot = Quaternion.LookRotation(direction);
 
-            Renderer rend = sushiObj.GetComponent<Renderer>();
-            if (rend != null)
+            if (weaponData != null && weaponData.weaponPrefab != null)
             {
-                rend.material.color = weaponData != null ? weaponData.weaponColor : new Color(0.1f, 0.8f, 0.4f);
+                sushiObj = Instantiate(weaponData.weaponPrefab, transform.position + Vector3.up * 0.5f, rot);
+            }
+            else
+            {
+                sushiObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                sushiObj.name = "SushiProjectile";
+                sushiObj.transform.position = transform.position + Vector3.up * 0.5f;
+                sushiObj.transform.rotation = rot;
             }
 
-            Collider col = sushiObj.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
+            Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null)
+    ? weaponData.weaponPrefab.transform.localScale
+    : new Vector3(0.8f, 0.4f, 1f);
 
-            Rigidbody rb = sushiObj.AddComponent<Rigidbody>();
+            sushiObj.transform.localScale = prefabScale * GetArea(stats.areaScale);
+
+            Collider col = sushiObj.GetComponent<Collider>();
+            if (col == null) col = sushiObj.AddComponent<BoxCollider>();
+            col.isTrigger = true;
+
+            Rigidbody rb = sushiObj.GetComponent<Rigidbody>();
+            if (rb == null) rb = sushiObj.AddComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.useGravity = false;
 

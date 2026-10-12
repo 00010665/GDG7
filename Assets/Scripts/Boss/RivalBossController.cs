@@ -3,6 +3,7 @@ using FoodSurvivors.Core;
 using FoodSurvivors.Enemies;
 using FoodSurvivors.Player;
 using FoodSurvivors.Weapons;
+using FoodSurvivors.Data;
 
 namespace FoodSurvivors.Boss
 {
@@ -32,6 +33,7 @@ namespace FoodSurvivors.Boss
         private Rigidbody rb;
         private Transform targetTourist;
         private WeaponManager weaponManager;
+        private PassiveManager passiveManager;
         private PlayerController player;
         private Vector3 currentMoveDirection = Vector3.zero;
 
@@ -54,14 +56,12 @@ namespace FoodSurvivors.Boss
             archetype = arch;
             damageMultiplier = dmgMult;
 
-            // Безопасное назначение тэга
             try { gameObject.tag = "Boss"; }
-            catch { Debug.LogWarning("[RivalBoss] Тэг 'Boss' еще не добавлен в TagManager"); }
+            catch { }
 
             rb = GetComponent<Rigidbody>();
             if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
 
-            // Настройка физики (упирается в стены зданий и машин!)
             rb.useGravity = false;
             rb.isKinematic = false;
             rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
@@ -81,11 +81,12 @@ namespace FoodSurvivors.Boss
             }
 
             weaponManager = gameObject.AddComponent<WeaponManager>();
+            passiveManager = gameObject.AddComponent<PassiveManager>();
 
             switch (archetype)
             {
                 case BossArchetype.FoodCart:
-                    moveSpeed = 0f;
+                    moveSpeed = 0f; // Тележка стоит на месте
                     break;
                 case BossArchetype.FoodTruck:
                     moveSpeed = (player != null ? player.currentMoveSpeed : 6f) * 1.5f;
@@ -95,26 +96,113 @@ namespace FoodSurvivors.Boss
                     break;
             }
 
-            EquipRivalWeapons(levelOffset);
+            SetupExactBossLoadout(levelOffset);
         }
 
-        private void EquipRivalWeapons(int levelOffset)
+        private void SetupExactBossLoadout(int levelOffset)
         {
-            if (player != null)
+            // Проверяем: есть ли сохраненный билд игрока из прошлого рана
+            string savedWeapons = PlayerPrefs.GetString("PrevRun_Weapons", "");
+            string savedPassives = PlayerPrefs.GetString("PrevRun_Passives", "");
+
+            if (!string.IsNullOrEmpty(savedWeapons))
             {
-                WeaponManager pw = player.GetComponent<WeaponManager>();
-                if (pw != null && pw.activeWeapons != null)
+                // Копируем билд игрока из прошлого раунда с (Уровень - 1)
+                ApplySavedBuild(savedWeapons, savedPassives, levelOffset);
+            }
+            else
+            {
+                // ПЕРВЫЙ ЗАПУСК: Точные фиксированные пресеты!
+                ApplyFirstRunDefaultBuild();
+            }
+
+            // Помечаем все оружия босса, чтобы они не роняли гемы
+            foreach (var w in weaponManager.activeWeapons)
+            {
+                if (w != null) w.isBossWeapon = true;
+            }
+        }
+
+        private void ApplyFirstRunDefaultBuild()
+        {
+            switch (archetype)
+            {
+                case BossArchetype.FoodCart:
+                    EquipWeaponByName("SalsaSplash", 3);
+                    EquipPassiveByName("SpicyPepper", 3);
+                    break;
+
+                case BossArchetype.FoodTruck:
+                    EquipWeaponByName("TacoThrow", 3);
+                    EquipPassiveByName("FastService", 3);
+                    break;
+
+                case BossArchetype.TripleDelivery:
+                    EquipWeaponByName("PastaLauncher", 3);
+                    EquipPassiveByName("FastService", 3);
+                    EquipPassiveByName("ComfortShoes", 3);
+                    break;
+            }
+        }
+
+        private void ApplySavedBuild(string wStr, string pStr, int offset)
+        {
+            string[] wArr = wStr.Split(';');
+            foreach (var wData in wArr)
+            {
+                string[] parts = wData.Split(':');
+                if (parts.Length == 2)
                 {
-                    foreach (var w in pw.activeWeapons)
-                    {
-                        if (w != null && w.weaponData != null)
-                        {
-                            weaponManager.AddWeapon(w.weaponData);
-                            WeaponBase bw = weaponManager.activeWeapons.Find(x => x.weaponData == w.weaponData);
-                            if (bw != null) bw.currentLevel = Mathf.Max(1, w.currentLevel - levelOffset);
-                        }
-                    }
+                    int lvl = Mathf.Max(1, int.Parse(parts[1]) - offset);
+                    EquipWeaponByName(parts[0], lvl);
                 }
+            }
+
+            string[] pArr = pStr.Split(';');
+            foreach (var pData in pArr)
+            {
+                string[] parts = pData.Split(':');
+                if (parts.Length == 2)
+                {
+                    int lvl = Mathf.Max(1, int.Parse(parts[1]) - offset);
+                    EquipPassiveByName(parts[0], lvl);
+                }
+            }
+        }
+
+        private void EquipWeaponByName(string assetName, int level)
+        {
+            WeaponData w = Resources.Load<WeaponData>($"Weapons/{assetName}");
+#if UNITY_EDITOR
+            if (w == null)
+            {
+                string[] guids = UnityEditor.AssetDatabase.FindAssets($"{assetName} t:WeaponData");
+                if (guids.Length > 0)
+                    w = UnityEditor.AssetDatabase.LoadAssetAtPath<WeaponData>(UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]));
+            }
+#endif
+            if (w != null && weaponManager != null)
+            {
+                weaponManager.AddWeapon(w);
+                var active = weaponManager.activeWeapons.Find(x => x.weaponData == w);
+                if (active != null) active.currentLevel = level;
+            }
+        }
+
+        private void EquipPassiveByName(string assetName, int level)
+        {
+            PassiveData p = Resources.Load<PassiveData>($"Passives/{assetName}");
+#if UNITY_EDITOR
+            if (p == null)
+            {
+                string[] guids = UnityEditor.AssetDatabase.FindAssets($"{assetName} t:PassiveData");
+                if (guids.Length > 0)
+                    p = UnityEditor.AssetDatabase.LoadAssetAtPath<PassiveData>(UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]));
+            }
+#endif
+            if (p != null && passiveManager != null)
+            {
+                for (int i = 0; i < level; i++) passiveManager.AddOrUpgradePassive(p);
             }
         }
 
@@ -122,11 +210,12 @@ namespace FoodSurvivors.Boss
         {
             HandleArchetypeBehavior();
             FindNearestTourist();
+            RotateTowardsTarget(); // ПОВОРОТ К ЦЕЛИ ДАЖЕ ЕСЛИ БОСС СТОИТ НА МЕСТЕ!
+            VacuumNearbyExperience(); // Поглощение опыта боссом!
         }
 
         private void FixedUpdate()
         {
-            // Физическое перемещение без прохождения сквозь стены
             if (archetype == BossArchetype.FoodCart || isTruckStopped || currentMoveDirection.sqrMagnitude < 0.01f)
             {
                 return;
@@ -134,15 +223,43 @@ namespace FoodSurvivors.Boss
 
             Vector3 targetPos = rb.position + currentMoveDirection * (moveSpeed * Time.fixedDeltaTime);
             rb.MovePosition(targetPos);
+        }
 
-            Quaternion targetRotation = Quaternion.LookRotation(currentMoveDirection, Vector3.up);
-            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, Time.fixedDeltaTime * 10f));
+        private void VacuumNearbyExperience()
+        {
+            // Босс испепеляет любые гемы опыта рядом с собой
+            float eatRadius = (archetype == BossArchetype.FoodCart) ? pullRadius : 8f;
+            Collider[] colliders = Physics.OverlapSphere(transform.position, eatRadius);
+            foreach (var c in colliders)
+            {
+                ExperienceGem gem = c.GetComponent<ExperienceGem>();
+                if (gem != null)
+                {
+                    Destroy(gem.gameObject); // Мгновенно съедает гем!
+                }
+            }
+        }
+
+        private void RotateTowardsTarget()
+        {
+            // Тележка поворачивается лицом к туристу, чтобы направленные атаки стреляли в цель!
+            if (targetTourist != null)
+            {
+                Vector3 lookDir = (targetTourist.position - transform.position);
+                lookDir.y = 0f;
+                if (lookDir.sqrMagnitude > 0.05f)
+                {
+                    Quaternion rot = Quaternion.LookRotation(lookDir.normalized, Vector3.up);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * 12f);
+                }
+            }
         }
 
         private void HandleArchetypeBehavior()
         {
             if (archetype == BossArchetype.FoodCart)
             {
+                // Притягивает туристов к себе
                 Collider[] colliders = Physics.OverlapSphere(transform.position, pullRadius);
                 foreach (var c in colliders)
                 {
@@ -162,12 +279,6 @@ namespace FoodSurvivors.Boss
 
         private void FindNearestTourist()
         {
-            if (archetype == BossArchetype.FoodCart || isTruckStopped)
-            {
-                currentMoveDirection = Vector3.zero;
-                return;
-            }
-
             if (targetTourist == null)
             {
                 targetTourist = FindNearestEnemyTransform();
@@ -219,7 +330,7 @@ namespace FoodSurvivors.Boss
                 EnemyController ec = other.GetComponent<EnemyController>();
                 if (ec != null)
                 {
-                    ec.TakeDamageFromBoss(15f * damageMultiplier * Time.deltaTime);
+                    ec.TakeDamageFromBoss(18f * damageMultiplier * Time.deltaTime);
                 }
             }
         }
@@ -231,7 +342,7 @@ namespace FoodSurvivors.Boss
                 EnemyController ec = collision.gameObject.GetComponent<EnemyController>();
                 if (ec != null)
                 {
-                    ec.TakeDamageFromBoss(15f * damageMultiplier * Time.deltaTime);
+                    ec.TakeDamageFromBoss(18f * damageMultiplier * Time.deltaTime);
                 }
             }
         }

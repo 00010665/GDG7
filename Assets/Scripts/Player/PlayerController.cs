@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
@@ -144,5 +145,34 @@ namespace FoodSurvivors.Player
         }
 
         public void Die() { }
+
+        public void SaveCurrentBuildForNextBoss()
+        {
+            WeaponManager wm = GetComponent<WeaponManager>();
+            PassiveManager pm = GetComponent<PassiveManager>();
+
+            if (wm != null && wm.activeWeapons.Count > 0)
+            {
+                List<string> wList = new List<string>();
+                foreach (var w in wm.activeWeapons)
+                {
+                    if (w != null && w.weaponData != null)
+                        wList.Add($"{w.weaponData.name}:{w.currentLevel}");
+                }
+                PlayerPrefs.SetString("PrevRun_Weapons", string.Join(";", wList));
+            }
+
+            if (pm != null && pm.activePassives.Count > 0)
+            {
+                List<string> pList = new List<string>();
+                foreach (var p in pm.activePassives)
+                {
+                    if (p != null)
+                        pList.Add($"{p.name}:{pm.GetPassiveLevel(p)}");
+                }
+                PlayerPrefs.SetString("PrevRun_Passives", string.Join(";", pList));
+            }
+            PlayerPrefs.Save();
+        }
     }
 }

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca24ae5db80efad4b907cbd32c56788a, type: 3}
+  m_Name: CharacterPrefabRegistry
+  m_EditorClassIdentifier: Assembly-CSharp::FoodSurvivors.Data.CharacterPrefabRegistry
+  playerPrefab: {fileID: 1685078851713964, guid: 17977690fb2e07948860ee4e6c270d49, type: 3}
+  enemyPrefabs:
+  - {fileID: 1349454168831766, guid: 16163977b8d5b8c498f4803635e189ea, type: 3}
+  - {fileID: 1177440017697582, guid: fa8c946ea0fd8654793a3cd77107899b, type: 3}
+  - {fileID: 1053166031852344, guid: 3fb7fce4c82cfee4cbe691c3da35c015, type: 3}
+  - {fileID: 1629301704965002, guid: f41585f0917ef564ab2160ec8b1abe2d, type: 3}
+  - {fileID: 1710635016008472, guid: f67aa0601e4198d46a4d9677dbac206c, type: 3}
+  - {fileID: 1420880779638038, guid: 6283ec0ecc79267429778b94cb8f0046, type: 3}
+  - {fileID: 1015987700250156, guid: 310d3cd93bf270d4395e806ccfb3f1db, type: 3}
+  - {fileID: 1377590562378364, guid: 63268b9ffaf7382429e961ffb35f24d9, type: 3}
+  - {fileID: 1492610174123012, guid: 67ff7d17398925a4c83e8c102511d161, type: 3}
+  levelBossPrefab: {fileID: 1057400303355432, guid: a4073db98d2b1a34387f956b716a5c91, type: 3}
+  foodCartBossPrefab: {fileID: 1653101950470510, guid: 5f1c3229bf0da2f409d8f6e953afcb53, type: 3}
+  foodTruckBossPrefab: {fileID: 1289069990132619665, guid: 5cbc420a47bd31f468c51814c54486b7, type: 3}
+  tripleDeliveryBossPrefab: {fileID: 1057400303355432, guid: a4073db98d2b1a34387f956b716a5c91, type: 3}

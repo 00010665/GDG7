@@ -54,7 +54,7 @@ namespace FoodSurvivors.Weapons
                 return;
             }
 
-            System.Type weaponType = GetWeaponType(data.weaponName);
+            System.Type weaponType = GetWeaponType(data);
             WeaponBase newWeapon = (WeaponBase)gameObject.AddComponent(weaponType);
             newWeapon.Initialize(data);
 
@@ -69,48 +69,41 @@ namespace FoodSurvivors.Weapons
             return existing != null ? existing.currentLevel : 0;
         }
 
+        public System.Type GetWeaponType(WeaponData data)
+        {
+            if (data == null) return typeof(PastaLauncher);
+
+            // 1. По надежному перечислению WeaponType
+            switch (data.weaponType)
+            {
+                case WeaponType.SashimiSlice: return typeof(SashimiSlice);
+                case WeaponType.SalsaSplash: return typeof(SalsaSplash);
+                case WeaponType.SoupBowl: return typeof(SoupBowl);
+                case WeaponType.SushiSet: return typeof(SushiSet);
+                case WeaponType.TacoThrow: return typeof(TacoThrow);
+                case WeaponType.PizzaCutter: return typeof(PizzaCutter);
+                case WeaponType.TeaPot: return typeof(TeaPot);
+                case WeaponType.MegaBurger: return typeof(MegaBurger);
+            }
+
+            // 2. По имени файла ассета (TeaPot.asset, SalsaSplash.asset и т.д.)
+            string assetFileName = data.name.ToLower();
+            if (assetFileName.Contains("sashimi")) return typeof(SashimiSlice);
+            if (assetFileName.Contains("salsa")) return typeof(SalsaSplash);
+            if (assetFileName.Contains("teapot") || assetFileName.Contains("hotdog")) return typeof(TeaPot);
+            if (assetFileName.Contains("soup")) return typeof(SoupBowl);
+            if (assetFileName.Contains("sushi")) return typeof(SushiSet);
+            if (assetFileName.Contains("taco")) return typeof(TacoThrow);
+            if (assetFileName.Contains("pizza")) return typeof(PizzaCutter);
+            if (assetFileName.Contains("burger")) return typeof(MegaBurger);
+
+            return typeof(PastaLauncher);
+        }
+
         public System.Type GetWeaponType(string weaponName)
         {
-            if (string.IsNullOrEmpty(weaponName)) return typeof(PastaLauncher);
-
-            string lower = weaponName.ToLower();
-
-            if (lower.Contains("сашими") || lower.Contains("sashimi") || lower.Contains("клинок") || lower.Contains("blade"))
-            {
-                return typeof(SashimiSlice);
-            }
-            else if (lower.Contains("сальса") || lower.Contains("salsa") || lower.Contains("пятно") || lower.Contains("splash"))
-            {
-                return typeof(SalsaSplash);
-            }
-            else if (lower.Contains("суп") || lower.Contains("soup"))
-            {
-                return typeof(SoupBowl);
-            }
-            else if (lower.Contains("суши") || lower.Contains("sushi"))
-            {
-                return typeof(SushiSet);
-            }
-            else if (lower.Contains("тако") || lower.Contains("taco"))
-            {
-                return typeof(TacoThrow);
-            }
-            else if (lower.Contains("пицц") || lower.Contains("pizza") || lower.Contains("cutter"))
-            {
-                return typeof(PizzaCutter);
-            }
-            else if (lower.Contains("чайник") || lower.Contains("кипяток") || lower.Contains("tea"))
-            {
-                return typeof(TeaPot);
-            }
-            else if (lower.Contains("бургер") || lower.Contains("burger"))
-            {
-                return typeof(MegaBurger);
-            }
-            else
-            {
-                return typeof(PastaLauncher);
-            }
+            // Устаревший вызов для обратной совместимости
+            return typeof(PastaLauncher);
         }
     }
 }

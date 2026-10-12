@@ -6,50 +6,52 @@ namespace FoodSurvivors.Weapons
 {
     public class TeaPot : WeaponBase
     {
-        private GameObject currentStream;
+        private GameObject activeBeamObj;
 
         protected override void PerformAttack()
         {
             WeaponLevelData stats = GetCurrentLevelData();
 
-            if (currentStream != null)
+            if (activeBeamObj != null) Destroy(activeBeamObj);
+
+            Vector3 spawnOffset = transform.forward * (2.0f * GetArea(stats.areaScale)) + Vector3.up * 0.5f;
+
+            if (weaponData != null && weaponData.weaponPrefab != null)
             {
-                Destroy(currentStream);
+                activeBeamObj = Instantiate(weaponData.weaponPrefab, transform.position + spawnOffset, transform.rotation);
+            }
+            else
+            {
+                activeBeamObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                activeBeamObj.transform.position = transform.position + spawnOffset;
+                activeBeamObj.transform.rotation = transform.rotation * Quaternion.Euler(90f, 0f, 0f);
             }
 
-            currentStream = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            currentStream.name = "BoilingWaterJet";
-            currentStream.transform.SetParent(transform, false);
+            activeBeamObj.transform.SetParent(transform, true);
+            float scale = 2.2f * GetArea(stats.areaScale); //???
+            Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null)
+     ? weaponData.weaponPrefab.transform.localScale
+     : new Vector3(2f, 2f, 3f);
 
-            float length = 4.5f * GetArea(stats.areaScale);
-            float width = 1.2f * GetArea(stats.areaScale);
+            // Применяем масштаб префаба!
+            activeBeamObj.transform.localScale = prefabScale * GetArea(stats.areaScale);
 
-            currentStream.transform.localPosition = new Vector3(0f, 0.4f, length / 2f + 0.5f);
-            currentStream.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            currentStream.transform.localScale = new Vector3(width, length / 2f, width);
+            Collider col = activeBeamObj.GetComponent<Collider>();
+            if (col == null) col = activeBeamObj.AddComponent<BoxCollider>();
+            col.isTrigger = true;
 
-            Renderer rend = currentStream.GetComponent<Renderer>();
-            if (rend != null)
-            {
-                Color c = weaponData != null ? weaponData.weaponColor : new Color(0.3f, 0.7f, 1f, 0.6f);
-                c.a = 0.6f;
-                rend.material.color = c;
-            }
-
-            Collider col = currentStream.GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
-
-            Rigidbody rb = currentStream.AddComponent<Rigidbody>();
+            Rigidbody rb = activeBeamObj.GetComponent<Rigidbody>();
+            if (rb == null) rb = activeBeamObj.AddComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.useGravity = false;
 
-            BoilingWaterStream streamScript = currentStream.AddComponent<BoilingWaterStream>();
-            streamScript.Setup(GetDamage(stats.damage), stats.duration > 0 ? stats.duration : 1.8f);
+            BoilingWaterStream streamScript = activeBeamObj.AddComponent<BoilingWaterStream>();
+            streamScript.Setup(GetDamage(stats.damage), stats.duration > 0 ? stats.duration : 2.0f);
         }
 
         private void OnDestroy()
         {
-            if (currentStream != null) Destroy(currentStream);
+            if (activeBeamObj != null) Destroy(activeBeamObj);
         }
     }
 
@@ -90,11 +92,7 @@ namespace FoodSurvivors.Weapons
             List<GameObject> toRemove = new List<GameObject>();
             foreach (var enemy in enemiesInRange)
             {
-                if (enemy == null)
-                {
-                    toRemove.Add(enemy);
-                    continue;
-                }
+                if (enemy == null) { toRemove.Add(enemy); continue; }
                 enemy.SendMessage("TakeDamage", damage, SendMessageOptions.DontRequireReceiver);
             }
             foreach (var r in toRemove) enemiesInRange.Remove(r);
@@ -102,18 +100,12 @@ namespace FoodSurvivors.Weapons
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.CompareTag("Enemy"))
-            {
-                enemiesInRange.Add(other.gameObject);
-            }
+            if (other.CompareTag("Enemy")) enemiesInRange.Add(other.gameObject);
         }
 
         private void OnTriggerExit(Collider other)
         {
-            if (other.CompareTag("Enemy"))
-            {
-                enemiesInRange.Remove(other.gameObject);
-            }
+            if (other.CompareTag("Enemy")) enemiesInRange.Remove(other.gameObject);
         }
     }
 }
