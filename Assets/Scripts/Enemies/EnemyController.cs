@@ -6,8 +6,18 @@ using FoodSurvivors.UI;
 
 namespace FoodSurvivors.Enemies
 {
+    public enum EnemyBehaviorState
+    {
+        Hungry, // Голодный: бежит к повару
+        Full,   // Сытый: стоит на месте
+        Busy    // Занятой: бегает по случайным точкам
+    }
+
     public class EnemyController : MonoBehaviour
     {
+        [Header("Behavior State")]
+        public EnemyBehaviorState behaviorState = EnemyBehaviorState.Hungry;
+
         [Header("Enemy Data")]
         public EnemyData enemyData;
 
@@ -24,9 +34,14 @@ namespace FoodSurvivors.Enemies
         private PlayerController playerController;
         private Renderer enemyRenderer;
 
-        public void Initialize(EnemyData data)
+        // Переменные для состояния "Занятой"
+        private Vector3 busyTargetPos;
+        private float busyChangeTimer = 0f;
+
+        public void Initialize(EnemyData data, EnemyBehaviorState state = EnemyBehaviorState.Hungry)
         {
             enemyData = data;
+            behaviorState = state;
             gameObject.tag = "Enemy";
 
             if (enemyData != null)
@@ -39,7 +54,7 @@ namespace FoodSurvivors.Enemies
                 xpValue = enemyData.xpValue;
                 isBoss = enemyData.isBoss;
 
-                transform.localScale = enemyData.scale != Vector3.zero ? enemyData.scale : (isBoss ? Vector3.one * 2f : Vector3.one);
+                transform.localScale = enemyData.scale != Vector3.zero ? enemyData.scale : (isBoss ? Vector3.one * 2.5f : Vector3.one);
 
                 enemyRenderer = GetComponentInChildren<Renderer>();
                 if (enemyRenderer != null)
@@ -59,21 +74,16 @@ namespace FoodSurvivors.Enemies
             }
 
             FindPlayer();
+            PickNewBusyTarget();
 
             EnemyVisuals visuals = GetComponent<EnemyVisuals>();
-            if (visuals == null)
-            {
-                visuals = gameObject.AddComponent<EnemyVisuals>();
-            }
+            if (visuals == null) visuals = gameObject.AddComponent<EnemyVisuals>();
             visuals.ApplyEnemyVisuals(enemyData);
         }
 
         private void Start()
         {
-            if (playerTransform == null)
-            {
-                FindPlayer();
-            }
+            if (playerTransform == null) FindPlayer();
         }
 
         private void FindPlayer()
@@ -88,44 +98,87 @@ namespace FoodSurvivors.Enemies
 
         private void Update()
         {
-            if (playerTransform == null)
+            HandleBehaviorMovement();
+
+            // Проверяем телепортацию через край карты (Pac-Man)
+            if (MapBoundsManager.Instance != null && MapBoundsManager.Instance.enablePacmanTeleport)
             {
-                FindPlayer();
-                return;
+                Vector3 pos = transform.position;
+                if (MapBoundsManager.Instance.CheckAndWrapPosition(ref pos))
+                {
+                    transform.position = pos;
+                }
             }
+        }
 
-            Vector3 direction = (playerTransform.position - transform.position);
-            direction.y = 0f;
+        private void HandleBehaviorMovement()
+        {
+            if (moveSpeed <= 0.01f) return;
 
-            if (direction.sqrMagnitude > 0.01f)
+            switch (behaviorState)
             {
-                Vector3 moveDir = direction.normalized;
-                transform.position += moveDir * (moveSpeed * Time.deltaTime);
+                case EnemyBehaviorState.Full:
+                    // Сытые стоят на месте (скорость 0)
+                    break;
 
-                Quaternion targetRotation = Quaternion.LookRotation(moveDir, Vector3.up);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+                case EnemyBehaviorState.Hungry:
+                    // Голодные бегут к игроку
+                    if (playerTransform != null)
+                    {
+                        Vector3 dir = (playerTransform.position - transform.position);
+                        dir.y = 0f;
+                        if (dir.sqrMagnitude > 0.05f)
+                        {
+                            MoveInDirection(dir.normalized);
+                        }
+                    }
+                    break;
+
+                case EnemyBehaviorState.Busy:
+                    // Занятые бегают в случайных направлениях по таймеру
+                    busyChangeTimer -= Time.deltaTime;
+                    if (busyChangeTimer <= 0f || Vector3.Distance(transform.position, busyTargetPos) < 1f)
+                    {
+                        PickNewBusyTarget();
+                    }
+
+                    Vector3 busyDir = (busyTargetPos - transform.position);
+                    busyDir.y = 0f;
+                    if (busyDir.sqrMagnitude > 0.05f)
+                    {
+                        MoveInDirection(busyDir.normalized);
+                    }
+                    break;
             }
+        }
+
+        private void MoveInDirection(Vector3 moveDir)
+        {
+            transform.position += moveDir * (moveSpeed * Time.deltaTime);
+            Quaternion targetRotation = Quaternion.LookRotation(moveDir, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+        }
+
+        private void PickNewBusyTarget()
+        {
+            busyChangeTimer = Random.Range(3f, 6f);
+            Vector2 randCircle = Random.insideUnitCircle * Random.Range(8f, 16f);
+            busyTargetPos = transform.position + new Vector3(randCircle.x, 0f, randCircle.y);
         }
 
         private void OnTriggerStay(Collider other)
         {
-            if (other.CompareTag("Player"))
+            if (other.CompareTag("Player") && playerController != null)
             {
-                if (playerController != null)
-                {
-                    playerController.TakeDamage(damage * Time.deltaTime);
-                }
+                playerController.TakeDamage(damage * Time.deltaTime);
             }
         }
 
         private void OnCollisionStay(Collision collision)
         {
-            if (collision.gameObject.CompareTag("Player"))
+            if (collision.gameObject.CompareTag("Player") && playerController != null)
             {
-                if (playerController != null)
-                {
-                    playerController.TakeDamage(damage * Time.deltaTime);
-                }
+                playerController.TakeDamage(damage * Time.deltaTime);
             }
         }
 
@@ -134,12 +187,9 @@ namespace FoodSurvivors.Enemies
             float effectiveDamage = Mathf.Max(1f, dmg - armor);
             currentHealth -= effectiveDamage;
 
-            // Вспышка красного цвета при получении урона
             DamageFlash flasher = GetComponent<DamageFlash>();
             if (flasher == null) flasher = gameObject.AddComponent<DamageFlash>();
             flasher.CallFlash();
-
-            Debug.Log($"[EnemyController] {gameObject.name} took {effectiveDamage} damage (raw: {dmg}, armor: {armor}). HP: {currentHealth}/{maxHealth}");
 
             if (currentHealth <= 0f)
             {
@@ -150,8 +200,6 @@ namespace FoodSurvivors.Enemies
 
         public void Die()
         {
-            Debug.Log($"[EnemyController] {gameObject.name} (XP: {xpValue}) defeated!");
-
             if (ExperienceManager.Instance != null)
             {
                 ExperienceManager.Instance.enemiesKilledCount++;
@@ -180,10 +228,7 @@ namespace FoodSurvivors.Enemies
             gemObj.transform.localScale = Vector3.one * 0.35f;
 
             Renderer rend = gemObj.GetComponent<Renderer>();
-            if (rend != null)
-            {
-                rend.sharedMaterial = DefaultMaterialsGenerator.GetExpGemMaterial();
-            }
+            if (rend != null) rend.sharedMaterial = DefaultMaterialsGenerator.GetExpGemMaterial();
 
             Collider col = gemObj.GetComponent<Collider>();
             if (col != null) col.isTrigger = true;

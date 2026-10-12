@@ -162,17 +162,73 @@ namespace FoodSurvivors.Core
                     waveTimers[i] -= Time.deltaTime;
                     if (waveTimers[i] <= 0f)
                     {
-                        int count = Mathf.Max(1, wave.spawnCountPerTick);
-                        for (int c = 0; c < count; c++)
-                        {
-                            SpawnEnemy(wave.enemy);
-                        }
+                        // Спавним группой (от 3 до 5 человек) в соседнем чанке
+                        int groupCount = Random.Range(3, 6);
+                        SpawnGroupInNearbyChunk(wave.enemy, groupCount);
 
-                        float interval = wave.spawnInterval > 0.1f ? wave.spawnInterval : 1f;
+                        float interval = wave.spawnInterval > 0.1f ? wave.spawnInterval : 2.5f;
                         waveTimers[i] = interval;
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Спавнит группу мобов со смешанным поведением в соседнем чанке
+        /// </summary>
+        private void SpawnGroupInNearbyChunk(EnemyData enemyData, int count)
+        {
+            if (playerTransform == null || enemyData == null) return;
+
+            Vector3 groupCenterPos;
+            if (MapBoundsManager.Instance != null)
+            {
+                groupCenterPos = MapBoundsManager.Instance.GetRandomPositionNearPlayerChunk(playerTransform.position);
+            }
+            else
+            {
+                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                groupCenterPos = playerTransform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * spawnRadius;
+            }
+
+            for (int c = 0; c < count; c++)
+            {
+                Vector2 offset = Random.insideUnitCircle * 2.5f;
+                Vector3 spawnPos = groupCenterPos + new Vector3(offset.x, 0.5f, offset.y);
+
+                // Случайное поведение для каждого моба в группе
+                EnemyBehaviorState state = (EnemyBehaviorState)Random.Range(0, 3); // Hungry, Full или Busy
+
+                SpawnEnemyAtPosition(enemyData, spawnPos, state, false);
+            }
+        }
+
+        public GameObject SpawnEnemyAtPosition(EnemyData enemyData, Vector3 spawnPos, EnemyBehaviorState state, bool isBoss = false)
+        {
+            GameObject enemyObj = GameObject.CreatePrimitive(isBoss ? PrimitiveType.Cube : PrimitiveType.Capsule);
+            enemyObj.name = $"Enemy_{enemyData.enemyName}_{state}";
+            enemyObj.transform.position = spawnPos;
+
+            if (isBoss) enemyObj.transform.localScale = Vector3.one * 2.5f;
+
+            Renderer rend = enemyObj.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                // Небольшой цветовой оттенок по поведению:
+                // Голодные — красные, Занятые — оранжево-желтые, Сытые — зеленовато-серые
+                Color col = enemyData.enemyColor;
+                if (state == EnemyBehaviorState.Full) col = Color.gray;
+                else if (state == EnemyBehaviorState.Busy) col = new Color(1f, 0.6f, 0.1f);
+                rend.sharedMaterial = DefaultMaterialsGenerator.CreateSolidColorMaterial($"M_{state}", col);
+            }
+
+            Rigidbody rb = enemyObj.AddComponent<Rigidbody>();
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionY;
+
+            EnemyController enemyCtrl = enemyObj.AddComponent<EnemyController>();
+            enemyCtrl.Initialize(enemyData, state);
+
+            return enemyObj;
         }
 
         private void CheckBossSpawn()
