@@ -58,10 +58,7 @@ namespace FoodSurvivors.Core
 
             InitWaveTimers();
 
-            if (AudioManager.Instance != null && currentLevelData != null && currentLevelData.backgroundMusic != null)
-            {
-                AudioManager.Instance.PlayBGM(currentLevelData.backgroundMusic);
-            }
+            AudioManager.Instance?.PlayInGameMusic();
 
             Debug.Log($"[WaveManager] Started. Level: {currentLevelData.levelName}, Waves: {(currentLevelData.waves != null ? currentLevelData.waves.Count : 0)}");
         }

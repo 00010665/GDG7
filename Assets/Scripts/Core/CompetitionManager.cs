@@ -155,6 +155,7 @@ namespace FoodSurvivors.Core
             spawnPos.y = playerPos.y;
 
             BossArchetype archetype = (BossArchetype)Random.Range(0, 3);
+            AudioManager.Instance?.BeginBossEncounter(archetype);
             Debug.Log($"[CompetitionManager] 👹 Заспавнен Шеф-Соперник: {archetype} на позиции {spawnPos}");
 
             if (archetype == BossArchetype.TripleDelivery)
