@@ -15,6 +15,10 @@ namespace FoodSurvivors.Data
         public Vector3 scale = Vector3.one;
         public bool isBoss = false;
 
+        [Header("Character Model")]
+        [Tooltip("Prefab family in CharacterPrefabRegistry, e.g. FoodBlogger, Hipster or VIPGuest. Empty selects the full roster.")]
+        public string prefabFamily;
+
         [Header("Media Assets")]
         public Sprite enemySprite;
         public RuntimeAnimatorController animatorController;

@@ -47,7 +47,13 @@ namespace FoodSurvivors.EditorTools
             GameObject playerObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             playerObj.name = "Player";
             playerObj.tag = "Player";
-            playerObj.transform.position = new Vector3(0f, 1f, 0f);
+            playerObj.transform.position = new Vector3(0f, 0.5f, 0f);
+
+            CapsuleCollider capsule = playerObj.GetComponent<CapsuleCollider>();
+            if (capsule == null) capsule = playerObj.AddComponent<CapsuleCollider>();
+            capsule.center = new Vector3(0f, 1f, 0f);
+            capsule.height = 2f;
+            capsule.radius = 0.45f;
 
             playerObj.AddComponent<PlayerController>();
             playerObj.AddComponent<PlayerVisuals>();

@@ -42,6 +42,7 @@ namespace FoodSurvivors.Player
         private Rigidbody rb;
         private WeaponManager weaponManager;
         private StaminaSystem staminaSystem;
+        private bool chefStatsInitialized;
 
         public Vector2 MoveInput { get; private set; }
         public bool IsWalking => MoveInput.sqrMagnitude > 0.01f;
@@ -53,11 +54,56 @@ namespace FoodSurvivors.Player
             staminaSystem = GetComponent<StaminaSystem>();
             if (staminaSystem == null) staminaSystem = gameObject.AddComponent<StaminaSystem>();
 
+            CapsuleCollider bodyCollider = GetComponent<CapsuleCollider>();
+            if (bodyCollider == null) bodyCollider = gameObject.AddComponent<CapsuleCollider>();
+            FitColliderToModel(bodyCollider);
+
             // Настройка физики
             rb.useGravity = false;
             rb.isKinematic = false;
             rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+            InitializeChefStats();
+        }
+
+        private void FitColliderToModel(CapsuleCollider capsule)
+        {
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            bool foundRenderer = false;
+            Bounds worldBounds = new Bounds(transform.position, Vector3.zero);
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                if (!foundRenderer)
+                {
+                    worldBounds = renderer.bounds;
+                    foundRenderer = true;
+                }
+                else worldBounds.Encapsulate(renderer.bounds);
+            }
+
+            if (!foundRenderer) return;
+
+            Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            Vector3 max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = new Vector3(
+                    (i & 1) == 0 ? worldBounds.min.x : worldBounds.max.x,
+                    (i & 2) == 0 ? worldBounds.min.y : worldBounds.max.y,
+                    (i & 4) == 0 ? worldBounds.min.z : worldBounds.max.z);
+                Vector3 local = transform.InverseTransformPoint(corner);
+                min = Vector3.Min(min, local);
+                max = Vector3.Max(max, local);
+            }
+
+            Vector3 size = max - min;
+            capsule.direction = 1;
+            capsule.center = (min + max) * 0.5f;
+            capsule.radius = Mathf.Max(0.2f, Mathf.Min(size.x, size.z) * 0.4f);
+            capsule.height = Mathf.Max(size.y, capsule.radius * 2f);
+            capsule.isTrigger = false;
         }
 
         private void Start()
@@ -69,6 +115,8 @@ namespace FoodSurvivors.Player
 
         public void InitializeChefStats()
         {
+            if (chefStatsInitialized) return;
+
             if (GameManager.Instance != null && GameManager.Instance.selectedChef != null)
             {
                 chefData = GameManager.Instance.selectedChef;
@@ -78,6 +126,7 @@ namespace FoodSurvivors.Player
             {
                 currentMoveSpeed = chefData.moveSpeed;
                 currentArmor = chefData.armor;
+                chefStatsInitialized = true;
             }
         }
 
@@ -85,8 +134,8 @@ namespace FoodSurvivors.Player
         {
             ReadInput();
 
-            // Рывок на Shift или Space
-            if (Keyboard.current != null)
+            // Рывок на Shift или Space только во время игры. На экране выбора Space подтверждает карточку.
+            if (Time.timeScale > 0f && Keyboard.current != null)
             {
                 if (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame)
                 {

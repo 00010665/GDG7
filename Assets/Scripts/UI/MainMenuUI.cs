@@ -167,7 +167,7 @@ namespace FoodSurvivors.UI
             switch (GameManager.Instance.selectedStaminaMode)
             {
                 case StaminaMode.Disabled:
-                    staminaModeLabelText.text = "Текущий режим: <b><color=red>БЕЗ СТАМИНЫ</color></b>\n<i>Классика, бесконечный бесплатный рывок</i>";
+                    staminaModeLabelText.text = "Текущий режим: <b><color=red>БЕЗ СТАМИНЫ</color></b>\n<i>Без рывка и бонуса урона от стамины</i>";
                     break;
                 case StaminaMode.DamageBoostOnly:
                     staminaModeLabelText.text = "Текущий режим: <b><color=yellow>СТАМИНА - УРОН</color></b>\n<i>Тратится от ударов, дает бонус урона атак</i>";
@@ -220,7 +220,7 @@ namespace FoodSurvivors.UI
             GUILayout.Label($"<b>Выбранный режим:</b> <color=yellow>{current}</color>");
             GUILayout.Space(15);
 
-            if (GUILayout.Button("1. 🚫 БЕЗ СТАМИНЫ\n(Классика, свободный рывок)", GUILayout.Height(45)))
+            if (GUILayout.Button("1. 🚫 БЕЗ СТАМИНЫ\n(Без рывка и бонуса урона от стамины)", GUILayout.Height(45)))
             {
                 SetStaminaMode(StaminaMode.Disabled);
             }

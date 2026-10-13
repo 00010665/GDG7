@@ -41,7 +41,9 @@ namespace FoodSurvivors.Core
                 return;
             }
 
-            float distance = Vector3.Distance(transform.position, playerTransform.position);
+            Vector3 toPlayer = transform.position - playerTransform.position;
+            toPlayer.y = 0f;
+            float distance = toPlayer.magnitude;
             float radius = playerController != null ? playerController.magnetRadius : 3.5f;
 
             if (distance <= radius)
@@ -54,7 +56,9 @@ namespace FoodSurvivors.Core
                 Vector3 targetPos = playerTransform.position + Vector3.up * 0.5f;
                 transform.position = Vector3.MoveTowards(transform.position, targetPos, magnetSpeed * Time.deltaTime);
 
-                if (Vector3.Distance(transform.position, targetPos) < 0.8f)
+                Vector3 remaining = transform.position - targetPos;
+                remaining.y = 0f;
+                if (remaining.sqrMagnitude < 0.64f)
                 {
                     Collect();
                 }

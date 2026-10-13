@@ -87,7 +87,7 @@ namespace FoodSurvivors.UI
 
             if (titleText != null)
             {
-                titleText.text = isVictory ? "🏆 ПОБЕДА! 🏆" : "💀 ПОРАЖЕНИЕ 💀";
+                titleText.text = isVictory ? "ПОБЕДА!" : "ПОРАЖЕНИЕ";
                 titleText.color = isVictory ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.25f, 0.25f);
             }
 
@@ -135,16 +135,16 @@ namespace FoodSurvivors.UI
                     }
                     if (pNames.Count > 0) passivesList = string.Join(", ", pNames);
                 }
-                string resultHeader = isVictory ? "🏆 ПОБЕДА! ВЫ ПЕРЕКОРМИЛИ СОПЕРНИКА!" : "💀 ПОРАЖЕНИЕ! СОПЕРНИК НАКОРМИЛ БОЛЬШЕ!";
+                string resultHeader = isVictory ? "ПОБЕДА! ВЫ ПЕРЕКОРМИЛИ СОПЕРНИКА!" : "ПОРАЖЕНИЕ! СОПЕРНИК НАКОРМИЛ БОЛЬШЕ!";
 
                 // Формируем детальный финансово-кулинарный отчет
                 statsText.text = $"<b>{resultHeader}</b>\n\n" +
-                             $"<b>⏱️ Время раунда:</b> {mins:00}:{secs:00}\n" +
-                             $"<b>🏆 Уровень повара:</b> {level}\n" +
-                             $"<b><color=cyan>👨‍🍳 Ваш счет (Накормлено): {myKills}</color></b>\n" +
-                             $"<b><color=magenta>👹 Счет соперника (Накормлено): {bossKills}</color></b>\n\n" +
-                             $"<b>🍲 Экипированные блюда:</b> {weaponsList}\n" +
-                             $"<b>🧂 Активные таланты:</b> {passivesList}";
+                             $"<b>Время раунда:</b> {mins:00}:{secs:00}\n" +
+                             $"<b>Уровень повара:</b> {level}\n" +
+                             $"<b><color=#43D9FF>Ваш счет (Накормлено): {myKills}</color></b>\n" +
+                             $"<b><color=#D88AFF>Счет соперника (Накормлено): {bossKills}</color></b>\n\n" +
+                             $"<b>Экипированные блюда:</b> {weaponsList}\n" +
+                             $"<b>Активные таланты:</b> {passivesList}";
             }
 
            

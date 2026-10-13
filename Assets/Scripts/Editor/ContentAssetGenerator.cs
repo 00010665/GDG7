@@ -158,14 +158,14 @@ namespace FoodSurvivors.EditorTools
 
         private static void GeneratePassives()
         {
-            CreatePassive("CheeseArmor", "Сырная броня", "Уменьшает получаемый урон (+Броня)", Color.yellow, PassiveType.ArmorBonus, new float[] { 2f, 4f, 6f, 8f, 10f });
-            CreatePassive("WasabiBoost", "Васаби-ускорение", "Острая приправа ускоряет передвижение (+Скорость)", new Color(0.4f, 0.9f, 0.3f), PassiveType.SpeedBonus, new float[] { 1.2f, 2.4f, 3.6f, 4.8f, 6.0f });
-            CreatePassive("SpicyPepper", "Острый перчик", "Увеличивает область поражения и силу атак (+Радиус/Урон)", Color.red, PassiveType.AreaBonus, new float[] { 0.15f, 0.30f, 0.45f, 0.60f, 0.75f });
+            CreatePassive("CheeseArmor", "Сырная броня", "Снижает расход стамины при ударах и рывках", Color.yellow, PassiveType.ArmorBonus, new float[] { 2f, 4f, 6f, 8f, 10f });
+            CreatePassive("WasabiBoost", "Васаби-усиление", "Усиливает бонусы урона и дальности рывка от стамины", new Color(0.4f, 0.9f, 0.3f), PassiveType.StaminaSynergy, new float[] { 1.2f, 2.4f, 3.6f, 4.8f, 6.0f });
+            CreatePassive("SpicyPepper", "Острый перчик", "Увеличивает только радиус атак", Color.red, PassiveType.AreaBonus, new float[] { 0.15f, 0.30f, 0.45f, 0.60f, 0.75f });
             CreatePassive("FastService", "Быстрая Подача", "Шеф быстрее отдает блюда (-Перезарядка)", new Color(0.9f, 0.5f, 0.9f), PassiveType.CooldownReduction, new float[] { 0.08f, 0.16f, 0.24f, 0.32f, 0.40f });
             CreatePassive("BigPortion", "Большая Порция", "Сытные порции наносят больше урона (+Базовый урон)", new Color(1f, 0.4f, 0.2f), PassiveType.DamageBonus, new float[] { 0.15f, 0.30f, 0.45f, 0.60f, 0.75f });
             CreatePassive("TipJar", "Чаевые", "Довольные гости оставляют больше чаевых (+Опыт)", Color.yellow, PassiveType.XpBonus, new float[] { 0.20f, 0.40f, 0.60f, 0.80f, 1.00f });
             CreatePassive("ComfortShoes", "Удобная Обувь", "Ортопедическая обувь для кухни (+Скорость бега)", Color.green, PassiveType.SpeedBonus, new float[] { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f });
-            CreatePassive("FreshIngredients", "Свежие Ингредиенты", "Органические продукты дают запас сил (+Макс. HP / Реген)", Color.magenta, PassiveType.HealthBonus, new float[] { 25f, 50f, 75f, 100f, 125f });
+            CreatePassive("FreshIngredients", "Свежие Ингредиенты", "Увеличивает максимум стамины и её регенерацию", Color.magenta, PassiveType.StaminaCapacityAndRegen, new float[] { 25f, 50f, 75f, 100f, 125f });
             CreatePassive("MagnetApron", "Магнитный Фартук", "Фартук с магнитами притягивает чаевые издалека (+Радиус сбора)", Color.cyan, PassiveType.MagnetBonus, new float[] { 1.5f, 3.0f, 4.5f, 6.0f, 7.5f });
         }
 

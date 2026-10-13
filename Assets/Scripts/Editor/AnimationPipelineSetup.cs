@@ -399,7 +399,8 @@ namespace FoodSurvivors.EditorTools
                 return;
             }
 
-            Vector3 position = oldPlayer != null ? oldPlayer.transform.position : new Vector3(0f, 1f, 0f);
+            Vector3 position = oldPlayer != null ? oldPlayer.transform.position : new Vector3(0f, 0.5f, 0f);
+            if (oldPlayer != null) position.y = Mathf.Max(0.5f, position.y - 0.5f);
             Quaternion rotation = oldPlayer != null ? oldPlayer.transform.rotation : Quaternion.identity;
             Vector3 scale = oldPlayer != null ? oldPlayer.transform.localScale : Vector3.one;
             PlayerController oldController = oldPlayer != null ? oldPlayer.GetComponent<PlayerController>() : null;

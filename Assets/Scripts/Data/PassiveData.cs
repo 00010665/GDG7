@@ -16,7 +16,9 @@ namespace FoodSurvivors.Data
         AreaBonus,          // Размер атак
         XpBonus,            // Опыт
         MagnetBonus,        // Магнит
-        HealthBonus         // Сохранено для обратной совместимости
+        HealthBonus,        // Сохранено для обратной совместимости
+        StaminaSynergy,     // Усиление урона и рывка, основанных на стамине
+        StaminaCapacityAndRegen // Максимум стамины и её регенерация
     }
 
     [Serializable]

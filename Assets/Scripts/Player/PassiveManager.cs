@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
-using FoodSurvivors.Boss;
 
 namespace FoodSurvivors.Player
 {
@@ -13,24 +12,11 @@ namespace FoodSurvivors.Player
         public Dictionary<PassiveData, int> passiveLevels = new Dictionary<PassiveData, int>();
 
         private PlayerController playerController;
-        private RivalBossController bossController;
-
-        private void Awake()
-        {
-            playerController = GetComponent<PlayerController>();
-            bossController = GetComponent<RivalBossController>();
-        }
 
         private void Start()
         {
-            if (playerController == null) playerController = GetComponent<PlayerController>();
-            if (bossController == null) bossController = GetComponent<RivalBossController>();
-
-            // Стартовую пассивку из профиля шефа берет только игрок
-            if (playerController != null)
-            {
-                InitializeStartingPassive();
-            }
+            playerController = GetComponent<PlayerController>();
+            InitializeStartingPassive();
         }
 
         private void InitializeStartingPassive()
@@ -80,7 +66,7 @@ namespace FoodSurvivors.Player
             }
 
             ApplyPassiveEffect(existing, currentLvl);
-            Debug.Log($"[PassiveManager] Применена пассивка: {existing.passiveName} (Ур. {currentLvl}) на объекте {gameObject.name}");
+            Debug.Log($"[PassiveManager] Применена пассивка: {existing.passiveName} (Ур. {currentLvl})");
         }
 
         public int GetPassiveLevel(PassiveData data)
@@ -97,77 +83,75 @@ namespace FoodSurvivors.Player
         private void ApplyPassiveEffect(PassiveData data, int level)
         {
             if (data == null) return;
-
             if (playerController == null) playerController = GetComponent<PlayerController>();
-            if (bossController == null) bossController = GetComponent<RivalBossController>();
 
             float val = 0f;
             if (data.levels != null && data.levels.Count >= level)
-            {
                 val = data.levels[level - 1].value;
-            }
 
-            // --- 1. ЕСЛИ ЭТО ИГРОК ---
             if (playerController != null)
             {
                 StaminaSystem st = playerController.Stamina;
 
                 switch (data.passiveType)
                 {
-                    case PassiveType.StaminaRegenBonus:
+                    case PassiveType.StaminaRegenBonus: // Второе дыхание
                         if (st != null) st.staminaRegenPerSec += (val > 0 ? val : 5f);
                         break;
 
-                    case PassiveType.StaminaDamageBonus:
+                    case PassiveType.StaminaCapacityAndRegen: // Свежие ингредиенты
+                        if (st != null)
+                        {
+                            float staminaIncrease = val > 0 ? val : 25f;
+                            st.maxStamina += staminaIncrease;
+                            st.currentStamina = Mathf.Min(st.maxStamina, st.currentStamina + staminaIncrease);
+                            st.staminaRegenPerSec += Mathf.Max(1f, staminaIncrease * 0.1f);
+                        }
+                        break;
+
+                    case PassiveType.StaminaSynergy: // Васаби усиливает бонусы, связанные со стаминой
+                        if (st != null) st.staminaBenefitMultiplier += (val > 0 ? val : 1f) * 0.05f;
+                        break;
+
+                    case PassiveType.StaminaDamageBonus: // Силовой напор
                         if (st != null) st.damageDivisor = Mathf.Max(6f, st.damageDivisor - (val > 0 ? val : 3f));
                         break;
 
-                    case PassiveType.DashCostBonus:
-                        if (st != null) st.dashCost = Mathf.Max(8f, st.dashCost - (val > 0 ? val : 4f));
+                    case PassiveType.DashCostBonus: // Удешевление рывка
+                        if (st != null) st.dashCost = Mathf.Max(6f, st.dashCost - (val > 0 ? val : 4f));
                         break;
 
-                    case PassiveType.ArmorBonus:
-                        playerController.currentArmor += (val > 0 ? val : 2f);
-                        break;
-
-                    case PassiveType.SpeedBonus:
+                    case PassiveType.SpeedBonus: // Васаби-ускорение (скорость бега)
                         playerController.currentMoveSpeed += (val > 0 ? val : 1.2f);
                         break;
 
-                    case PassiveType.DamageBonus:
+                    case PassiveType.ArmorBonus: // Сырная броня (снижает потерю стамины)
+                        if (st != null)
+                        {
+                            float reduction = val > 0 ? val : 2f;
+                            st.staminaLostOnHit = Mathf.Max(0f, st.staminaLostOnHit - reduction);
+                            st.dashCost = Mathf.Max(0f, st.dashCost - reduction);
+                        }
+                        break;
+
+                    case PassiveType.DamageBonus: // Большая порция
                         playerController.damageMultiplier += (val > 0 ? val : 0.15f);
                         break;
 
-                    case PassiveType.AreaBonus:
+                    case PassiveType.AreaBonus: // Острый перчик (ТОЛЬКО радиус атак!)
                         playerController.areaMultiplier += (val > 0 ? val : 0.15f);
-                        playerController.damageMultiplier += 0.05f;
                         break;
 
-                    case PassiveType.CooldownReduction:
+                    case PassiveType.CooldownReduction: // Быстрая подача
                         playerController.cooldownReduction = Mathf.Min(0.70f, playerController.cooldownReduction + (val > 0 ? val : 0.08f));
                         break;
 
-                    case PassiveType.XpBonus:
+                    case PassiveType.XpBonus: // Чаевые
                         if (ExperienceManager.Instance != null) ExperienceManager.Instance.xpMultiplier += (val > 0 ? val : 0.20f);
                         break;
 
-                    case PassiveType.MagnetBonus:
+                    case PassiveType.MagnetBonus: // Магнитный фартук
                         playerController.magnetRadius += (val > 0 ? val : 1.5f);
-                        break;
-                }
-            }
-            // --- 2. ЕСЛИ ЭТО БОСС (Соперник) ---
-            else if (bossController != null)
-            {
-                switch (data.passiveType)
-                {
-                    case PassiveType.SpeedBonus:
-                        bossController.moveSpeed += (val > 0 ? val : 1.2f);
-                        break;
-
-                    case PassiveType.DamageBonus:
-                    case PassiveType.AreaBonus:
-                        bossController.damageMultiplier += (val > 0 ? val : 0.2f);
                         break;
                 }
             }

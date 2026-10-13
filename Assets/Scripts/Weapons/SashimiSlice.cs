@@ -47,6 +47,7 @@ namespace FoodSurvivors.Weapons
 
             WeaponLevelData stats = GetCurrentLevelData();
             int count = Mathf.Max(1, stats.projectileCount);
+            float areaScale = GetArea(stats.areaScale);
 
             for (int i = 0; i < count; i++)
             {
@@ -72,11 +73,11 @@ namespace FoodSurvivors.Weapons
     ? weaponData.weaponPrefab.transform.localScale
     : new Vector3(0.4f, 0.15f, 1f);
 
-                bladeObj.transform.localScale = prefabScale * stats.areaScale;
+                bladeObj.transform.localScale = prefabScale * areaScale;
 
                 // Радиус орбиты автоматически подстраивается под размер клинков!
                 float bladeLength = Mathf.Max(prefabScale.x, prefabScale.z);
-                float radius = (2.2f + bladeLength) * stats.areaScale;
+                float radius = (2.2f + bladeLength) * areaScale;
 
                 Collider col = bladeObj.GetComponent<Collider>();
                 if (col != null) col.isTrigger = true;
@@ -103,7 +104,7 @@ namespace FoodSurvivors.Weapons
             int count = activeBlades.Count;
             if (count == 0) return;
 
-            float radius = 2.5f * stats.areaScale;
+            float radius = 2.5f * GetArea(stats.areaScale);
             float angleStep = 360f / count;
 
             for (int i = 0; i < count; i++)

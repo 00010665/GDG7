@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 using FoodSurvivors.Player;
@@ -37,6 +39,13 @@ namespace FoodSurvivors.UI
         public List<PassiveData> passivePool = new List<PassiveData>();
 
         private List<UpgradeOption> currentOptions = new List<UpgradeOption>();
+        private int selectedOptionIndex;
+        private int hoveredOptionIndex = -1;
+        private bool keyboardFocusActive;
+        private Color[] defaultTitleColors;
+        private Color[] defaultDescColors;
+        private Color[] defaultTypeColors;
+        private static readonly Color FocusTextColor = new Color(1f, 0.78f, 0.24f, 1f);
 
         private void Awake()
         {
@@ -51,7 +60,99 @@ namespace FoodSurvivors.UI
         private void Start()
         {
             if (levelUpPanel != null) levelUpPanel.SetActive(false);
+            CacheDefaultTextColors();
             LoadRealAssets();
+        }
+
+        private void Update()
+        {
+            if (levelUpPanel == null || !levelUpPanel.activeInHierarchy || currentOptions.Count == 0 || Keyboard.current == null)
+                return;
+
+            if (Keyboard.current.aKey.wasPressedThisFrame)
+                MoveSelection(-1);
+            else if (Keyboard.current.dKey.wasPressedThisFrame)
+                MoveSelection(1);
+
+            if (Keyboard.current.spaceKey.wasPressedThisFrame)
+                SelectOption(selectedOptionIndex);
+        }
+
+        private void CacheDefaultTextColors()
+        {
+            defaultTitleColors = CaptureColors(cardTitleTexts);
+            defaultDescColors = CaptureColors(cardDescTexts);
+            defaultTypeColors = CaptureColors(cardTypeTexts);
+        }
+
+        private static Color[] CaptureColors(TextMeshProUGUI[] texts)
+        {
+            if (texts == null) return System.Array.Empty<Color>();
+            Color[] colors = new Color[texts.Length];
+            for (int i = 0; i < texts.Length; i++)
+                colors[i] = texts[i] != null ? texts[i].color : Color.white;
+            return colors;
+        }
+
+        private void MoveSelection(int direction)
+        {
+            int optionCount = Mathf.Min(currentOptions.Count, cardButtons != null ? cardButtons.Length : 0);
+            if (optionCount == 0) return;
+
+            selectedOptionIndex = (selectedOptionIndex + direction + optionCount) % optionCount;
+            hoveredOptionIndex = -1;
+            keyboardFocusActive = true;
+            RefreshCardTextColors();
+        }
+
+        private void SetHoveredOption(int index, bool isHovered)
+        {
+            if (isHovered)
+            {
+                hoveredOptionIndex = index;
+                selectedOptionIndex = index;
+                keyboardFocusActive = false;
+            }
+            else if (hoveredOptionIndex == index)
+            {
+                hoveredOptionIndex = -1;
+            }
+
+            RefreshCardTextColors();
+        }
+
+        private void RefreshCardTextColors()
+        {
+            for (int i = 0; i < currentOptions.Count; i++)
+            {
+                bool highlighted = i == hoveredOptionIndex || (keyboardFocusActive && i == selectedOptionIndex);
+                SetTextColor(cardTitleTexts, defaultTitleColors, i, highlighted);
+                SetTextColor(cardDescTexts, defaultDescColors, i, highlighted);
+                SetTextColor(cardTypeTexts, defaultTypeColors, i, highlighted);
+            }
+        }
+
+        private static void SetTextColor(TextMeshProUGUI[] texts, Color[] defaults, int index, bool highlighted)
+        {
+            if (texts == null || index >= texts.Length || texts[index] == null) return;
+            Color normalColor = defaults != null && index < defaults.Length ? defaults[index] : Color.white;
+            texts[index].color = highlighted ? FocusTextColor : normalColor;
+        }
+
+        private void ConfigurePointerHighlight(Button button, int index)
+        {
+            EventTrigger trigger = button.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = button.gameObject.AddComponent<EventTrigger>();
+            if (trigger.triggers == null) trigger.triggers = new List<EventTrigger.Entry>();
+            trigger.triggers.Clear();
+
+            EventTrigger.Entry enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            enter.callback.AddListener(_ => SetHoveredOption(index, true));
+            trigger.triggers.Add(enter);
+
+            EventTrigger.Entry exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => SetHoveredOption(index, false));
+            trigger.triggers.Add(exit);
         }
 
         private void LoadRealAssets()
@@ -95,7 +196,11 @@ namespace FoodSurvivors.UI
             Time.timeScale = 0f;
 
             GenerateUpgradeOptions();
+            selectedOptionIndex = 0;
+            hoveredOptionIndex = -1;
+            keyboardFocusActive = true;
             DisplayOptions();
+            RefreshCardTextColors();
         }
 
         private void GenerateUpgradeOptions()
@@ -198,6 +303,7 @@ namespace FoodSurvivors.UI
                     int idx = i;
                     cardButtons[i].onClick.RemoveAllListeners();
                     cardButtons[i].onClick.AddListener(() => SelectOption(idx));
+                    ConfigurePointerHighlight(cardButtons[i], idx);
                 }
                 else
                 {

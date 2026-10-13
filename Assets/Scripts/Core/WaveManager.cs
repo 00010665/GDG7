@@ -162,8 +162,8 @@ namespace FoodSurvivors.Core
                     waveTimers[i] -= Time.deltaTime;
                     if (waveTimers[i] <= 0f)
                     {
-                        // Спавним группой (от 3 до 5 человек) в соседнем чанке
-                        int groupCount = Random.Range(3, 6);
+                        // Используем состав волны из LevelData, чтобы тайминг и численность совпадали с настройками уровня.
+                        int groupCount = Mathf.Max(1, wave.spawnCountPerTick);
                         SpawnGroupInNearbyChunk(wave.enemy, groupCount);
 
                         float interval = wave.spawnInterval > 0.1f ? wave.spawnInterval : 2.5f;
@@ -191,10 +191,56 @@ namespace FoodSurvivors.Core
                 groupCenterPos = playerTransform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * spawnRadius;
             }
 
+            const float minimumSpawnSpacing = 1.25f;
+            EnemyController[] existingEnemies = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+            List<Vector3> groupPositions = new List<Vector3>(count);
+
             for (int c = 0; c < count; c++)
             {
-                Vector2 offset = Random.insideUnitCircle * 2.5f;
-                Vector3 spawnPos = groupCenterPos + new Vector3(offset.x, 0.5f, offset.y);
+                Vector3 spawnPos = groupCenterPos;
+                bool hasSeparatedPosition = false;
+                for (int attempt = 0; attempt < 16; attempt++)
+                {
+                    Vector2 offset = Random.insideUnitCircle * 4f;
+                    spawnPos = groupCenterPos + new Vector3(offset.x, 0f, offset.y);
+                    hasSeparatedPosition = true;
+
+                    foreach (EnemyController existing in existingEnemies)
+                    {
+                        if (existing == null) continue;
+                        Vector3 delta = existing.transform.position - spawnPos;
+                        delta.y = 0f;
+                        if (delta.sqrMagnitude < minimumSpawnSpacing * minimumSpawnSpacing)
+                        {
+                            hasSeparatedPosition = false;
+                            break;
+                        }
+                    }
+
+                    if (hasSeparatedPosition)
+                    {
+                        foreach (Vector3 previousSpawn in groupPositions)
+                        {
+                            Vector3 delta = previousSpawn - spawnPos;
+                            delta.y = 0f;
+                            if (delta.sqrMagnitude < minimumSpawnSpacing * minimumSpawnSpacing)
+                            {
+                                hasSeparatedPosition = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (hasSeparatedPosition) break;
+                }
+
+                // Dense areas still get a spawn, but farther from the group center.
+                if (!hasSeparatedPosition)
+                {
+                    Vector2 offset = Random.insideUnitCircle.normalized * (4f + c * minimumSpawnSpacing);
+                    spawnPos = groupCenterPos + new Vector3(offset.x, 0f, offset.y);
+                }
+                groupPositions.Add(spawnPos);
 
                 // Случайное поведение для каждого моба в группе
                 EnemyBehaviorState state = (EnemyBehaviorState)Random.Range(0, 3); // Hungry, Full или Busy
@@ -206,7 +252,7 @@ namespace FoodSurvivors.Core
         public GameObject SpawnEnemyAtPosition(EnemyData enemyData, Vector3 spawnPos, EnemyBehaviorState state, bool isBoss = false)
         {
             CharacterPrefabRegistry registry = Resources.Load<CharacterPrefabRegistry>("FoodSurvivors/CharacterPrefabRegistry");
-            GameObject visualPrefab = isBoss ? registry?.levelBossPrefab : registry?.GetEnemyPrefab(enemyData != null ? enemyData.name : "");
+            GameObject visualPrefab = isBoss ? registry?.levelBossPrefab : registry?.GetEnemyPrefab(enemyData);
             GameObject enemyObj = visualPrefab != null
                 ? Instantiate(visualPrefab, spawnPos, Quaternion.identity)
                 : GameObject.CreatePrimitive(isBoss ? PrimitiveType.Cube : PrimitiveType.Capsule);
@@ -236,7 +282,51 @@ namespace FoodSurvivors.Core
             if (enemyCtrl == null) enemyCtrl = enemyObj.AddComponent<EnemyController>();
             enemyCtrl.Initialize(enemyData, state);
 
+            // Character source prefabs are render hierarchies; give each spawned NPC one body collider aligned to the actual model bounds.
+            CapsuleCollider bodyCollider = enemyObj.GetComponent<CapsuleCollider>();
+            if (bodyCollider == null) bodyCollider = enemyObj.AddComponent<CapsuleCollider>();
+            FitColliderToModel(enemyObj.transform, bodyCollider);
+
             return enemyObj;
+        }
+
+        private static void FitColliderToModel(Transform root, CapsuleCollider capsule)
+        {
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            bool foundRenderer = false;
+            Bounds worldBounds = new Bounds(root.position, Vector3.zero);
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                if (!foundRenderer)
+                {
+                    worldBounds = renderer.bounds;
+                    foundRenderer = true;
+                }
+                else worldBounds.Encapsulate(renderer.bounds);
+            }
+
+            if (!foundRenderer) return;
+
+            Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            Vector3 max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = new Vector3(
+                    (i & 1) == 0 ? worldBounds.min.x : worldBounds.max.x,
+                    (i & 2) == 0 ? worldBounds.min.y : worldBounds.max.y,
+                    (i & 4) == 0 ? worldBounds.min.z : worldBounds.max.z);
+                Vector3 local = root.InverseTransformPoint(corner);
+                min = Vector3.Min(min, local);
+                max = Vector3.Max(max, local);
+            }
+
+            Vector3 size = max - min;
+            capsule.direction = 1;
+            capsule.center = (min + max) * 0.5f;
+            capsule.radius = Mathf.Max(0.2f, Mathf.Min(size.x, size.z) * 0.4f);
+            capsule.height = Mathf.Max(size.y, capsule.radius * 2f);
+            capsule.isTrigger = false;
         }
 
         private void CheckBossSpawn()
@@ -259,7 +349,7 @@ namespace FoodSurvivors.Core
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
             Vector3 spawnOffset = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * spawnRadius;
             Vector3 spawnPos = playerTransform.position + spawnOffset;
-            spawnPos.y = isBoss ? 1.5f : 1.0f;
+            spawnPos.y = 0.5f;
 
             GameObject enemyObj = SpawnEnemyAtPosition(enemyData, spawnPos, EnemyBehaviorState.Hungry, isBoss);
             if (enemyObj == null) return null;

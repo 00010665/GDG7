@@ -5,7 +5,7 @@ namespace FoodSurvivors.Player
 {
     public enum StaminaMode
     {
-        Disabled,        // 1. БЕЗ СТАМИНЫ (Шкала скрыта, урон обычный, рывок бесплатный)
+        Disabled,        // 1. БЕЗ СТАМИНЫ (Шкала скрыта, обычный урон, без рывка)
         DamageBoostOnly, // 2. СТАМИНА - УРОН (Тратится от ударов, дает бонус к урону)
         DashOnly,        // 3. СТАМИНА - РЫВОК (Тратится на рывки с неуязвимостью, регенерирует)
         Hybrid           // 4. ГИБРИДНЫЙ (И рывки, и бонус к урону)
@@ -25,6 +25,7 @@ namespace FoodSurvivors.Player
         [Tooltip("Делитель стамины: 100 / 20 = 5 бонусного урона")]
         public float damageDivisor = 20f;
         public float staminaLostOnHit = 10f;
+        [Min(1f)] public float staminaBenefitMultiplier = 1f;
 
         [Header("Dash Mode Settings")]
         public float dashCost = 25f;
@@ -91,7 +92,7 @@ namespace FoodSurvivors.Player
             if (currentMode == StaminaMode.DashOnly || currentMode == StaminaMode.Disabled) return 0;
             if (damageDivisor <= 0.01f) return 0;
 
-            float rawBonus = currentStamina / damageDivisor;
+            float rawBonus = currentStamina / damageDivisor * staminaBenefitMultiplier;
             return Mathf.CeilToInt(rawBonus);
         }
 
@@ -117,10 +118,10 @@ namespace FoodSurvivors.Player
         /// </summary>
         public bool TryPerformDash(Vector3 inputDirection)
         {
-            if (currentMode == StaminaMode.DamageBoostOnly) return false;
+            if (currentMode == StaminaMode.Disabled || currentMode == StaminaMode.DamageBoostOnly) return false;
             if (isDashing || dashCooldownTimer > 0f) return false;
 
-            float actualCost = currentMode == StaminaMode.Disabled ? 0f : dashCost;
+            float actualCost = dashCost;
             if (currentStamina < actualCost) return false;
 
             currentStamina -= actualCost;
@@ -134,7 +135,7 @@ namespace FoodSurvivors.Player
             isDashing = true;
 
             Vector3 dashDir = direction.sqrMagnitude > 0.01f ? direction.normalized : transform.forward;
-            float speed = dashDistance / dashDuration;
+            float speed = (dashDistance * staminaBenefitMultiplier) / dashDuration;
 
             SetEnemyCollisionsIgnored(true);
 

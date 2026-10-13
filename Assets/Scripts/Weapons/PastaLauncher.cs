@@ -68,8 +68,6 @@ namespace FoodSurvivors.Weapons
                 projObj.name = "PastaProjectile";
                 projObj.transform.position = transform.position + Vector3.up * 0.5f;
                 projObj.transform.rotation = Quaternion.LookRotation(direction);
-                Vector3 prefabScale = (weaponData != null && weaponData.weaponPrefab != null) ? weaponData.weaponPrefab.transform.localScale : Vector3.one;
-                projObj.transform.localScale = prefabScale * (0.8f * stats.areaScale);
 
                 Renderer rend = projObj.GetComponent<Renderer>();
                 if (rend != null && weaponData != null)
@@ -77,6 +75,11 @@ namespace FoodSurvivors.Weapons
                     rend.material.color = weaponData.weaponColor;
                 }
             }
+
+            Vector3 prefabScale = weaponData != null && weaponData.weaponPrefab != null
+                ? weaponData.weaponPrefab.transform.localScale
+                : Vector3.one;
+            projObj.transform.localScale = prefabScale * (0.8f * GetArea(stats.areaScale));
 
             Collider col = projObj.GetComponent<Collider>();
             if (col != null) col.isTrigger = true;

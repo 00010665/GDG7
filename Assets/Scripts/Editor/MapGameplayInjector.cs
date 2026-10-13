@@ -38,7 +38,7 @@ namespace FoodSurvivors.EditorTools
                 playerObj = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 playerObj.name = "Player";
                 playerObj.tag = "Player";
-                playerObj.transform.position = new Vector3(0f, 1f, 0f); // Позиция в центре города
+                playerObj.transform.position = new Vector3(0f, 0.5f, 0f); // Позиция немного выше поверхности карты
 
                 playerObj.AddComponent<PlayerController>();
                 playerObj.AddComponent<PlayerVisuals>();

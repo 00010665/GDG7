@@ -20,6 +20,14 @@ namespace FoodSurvivors.Data
         public GameObject foodCartBossPrefab;
         public GameObject foodTruckBossPrefab;
         public GameObject tripleDeliveryBossPrefab;
+        private readonly System.Collections.Generic.Dictionary<string, int> nextVariantByFamily = new System.Collections.Generic.Dictionary<string, int>();
+
+        public GameObject GetEnemyPrefab(EnemyData enemyData)
+        {
+            if (enemyData == null) return GetEnemyPrefab(string.Empty);
+            string key = string.IsNullOrWhiteSpace(enemyData.prefabFamily) ? enemyData.name : enemyData.prefabFamily;
+            return GetEnemyPrefab(key);
+        }
 
         public GameObject GetEnemyPrefab(string enemyName)
         {
@@ -38,10 +46,18 @@ namespace FoodSurvivors.Data
                     GameObject candidate = enemyPrefabs[i];
                     if (candidate != null && candidate.name.StartsWith(group, StringComparison.OrdinalIgnoreCase)) matches.Add(candidate);
                 }
-                if (matches.Count > 0) return matches[StableHash(key) % matches.Count];
+                if (matches.Count > 0)
+                {
+                    nextVariantByFamily.TryGetValue(group, out int nextVariant);
+                    nextVariantByFamily[group] = nextVariant + 1;
+                    return matches[nextVariant % matches.Count];
+                }
             }
 
-            int index = StableHash(key) % enemyPrefabs.Length;
+            // Non-special enemy data also cycles through the complete configured roster.
+            const string allEnemies = "__all_enemies__";
+            nextVariantByFamily.TryGetValue(allEnemies, out int index);
+            nextVariantByFamily[allEnemies] = index + 1;
             for (int i = 0; i < enemyPrefabs.Length; i++)
             {
                 GameObject candidate = enemyPrefabs[(index + i) % enemyPrefabs.Length];
@@ -49,16 +65,6 @@ namespace FoodSurvivors.Data
             }
 
             return null;
-        }
-
-        private static int StableHash(string value)
-        {
-            unchecked
-            {
-                int hash = 17;
-                for (int i = 0; i < value.Length; i++) hash = hash * 31 + value[i];
-                return hash & 0x7fffffff;
-            }
         }
 
         public GameObject GetBossPrefab(BossArchetype archetype)
