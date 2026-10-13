@@ -16,7 +16,8 @@ namespace FoodSurvivors.Weapons
         private void Start()
         {
             playerController = GetComponent<PlayerController>();
-            InitializeStartingWeapon();
+            if (playerController != null)
+                InitializeStartingWeapon();
             Debug.Log($"[WeaponManager] Active weapons after init: {(activeWeapons != null ? activeWeapons.Count : 0)}");
         }
 

@@ -23,6 +23,12 @@ namespace FoodSurvivors.UI
     public class LevelUpUI : MonoBehaviour
     {
         public static LevelUpUI Instance { get; private set; }
+        public static bool IsRewardChoiceOpen { get; private set; }
+
+        private static int dashInputBlockedThroughFrame = -1;
+
+        public static bool BlocksPlayerDashInput =>
+            IsRewardChoiceOpen || Time.frameCount <= dashInputBlockedThroughFrame;
 
         [Header("UI Panels")]
         public GameObject levelUpPanel;
@@ -55,6 +61,15 @@ namespace FoodSurvivors.UI
                 return;
             }
             Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance != this) return;
+
+            Instance = null;
+            IsRewardChoiceOpen = false;
+            dashInputBlockedThroughFrame = Time.frameCount + 1;
         }
 
         private void Start()
@@ -160,6 +175,13 @@ namespace FoodSurvivors.UI
             weaponPool.Clear();
             passivePool.Clear();
 
+            LevelUpContentCatalog catalog = Resources.Load<LevelUpContentCatalog>("LevelUpContentCatalog");
+            if (catalog != null)
+            {
+                AddUniqueAssets(weaponPool, catalog.weapons);
+                AddUniqueAssets(passivePool, catalog.passives);
+            }
+
 #if UNITY_EDITOR
             string[] wGuids = UnityEditor.AssetDatabase.FindAssets("t:WeaponData", new[] { "Assets/ScriptableObjects/Weapons" });
             foreach (var g in wGuids)
@@ -175,16 +197,22 @@ namespace FoodSurvivors.UI
                 if (p != null && !passivePool.Contains(p)) passivePool.Add(p);
             }
 #endif
-            // Резерв через Resources
-            if (weaponPool.Count == 0)
+
+            // Also include any assets placed under Resources for projects that extend the catalog at runtime.
+            AddUniqueAssets(weaponPool, Resources.LoadAll<WeaponData>("Weapons"));
+            AddUniqueAssets(passivePool, Resources.LoadAll<PassiveData>("Passives"));
+
+            if (weaponPool.Count == 0 || passivePool.Count == 0)
+                Debug.LogError($"[LevelUpUI] Reward assets unavailable. Weapons: {weaponPool.Count}, passives: {passivePool.Count}. Ensure LevelUpContentCatalog is present under Assets/Resources.");
+        }
+
+        private static void AddUniqueAssets<T>(List<T> destination, IEnumerable<T> assets) where T : Object
+        {
+            if (destination == null || assets == null) return;
+            foreach (T asset in assets)
             {
-                var loadedW = Resources.LoadAll<WeaponData>("Weapons");
-                weaponPool.AddRange(loadedW);
-            }
-            if (passivePool.Count == 0)
-            {
-                var loadedP = Resources.LoadAll<PassiveData>("Passives");
-                passivePool.AddRange(loadedP);
+                if (asset != null && !destination.Contains(asset))
+                    destination.Add(asset);
             }
         }
 
@@ -192,10 +220,17 @@ namespace FoodSurvivors.UI
         {
             if (weaponPool.Count == 0 || passivePool.Count == 0) LoadRealAssets();
 
+            GenerateUpgradeOptions();
+            if (currentOptions.Count == 0)
+            {
+                Debug.LogError("[LevelUpUI] No available reward options; keeping gameplay running instead of freezing on an empty reward screen.");
+                return;
+            }
+
+            IsRewardChoiceOpen = true;
             if (levelUpPanel != null) levelUpPanel.SetActive(true);
             Time.timeScale = 0f;
 
-            GenerateUpgradeOptions();
             selectedOptionIndex = 0;
             hoveredOptionIndex = -1;
             keyboardFocusActive = true;
@@ -323,6 +358,9 @@ namespace FoodSurvivors.UI
 
         public void CloseLevelUpWindow()
         {
+            // Keep the confirmation key from also triggering a dash later in this frame.
+            IsRewardChoiceOpen = false;
+            dashInputBlockedThroughFrame = Time.frameCount + 1;
             if (levelUpPanel != null) levelUpPanel.SetActive(false);
             Time.timeScale = 1f;
         }

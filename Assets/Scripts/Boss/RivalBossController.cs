@@ -5,6 +5,7 @@ using FoodSurvivors.Enemies;
 using FoodSurvivors.Player;
 using FoodSurvivors.Weapons;
 using FoodSurvivors.Data;
+using System;
 
 namespace FoodSurvivors.Boss
 {
@@ -22,6 +23,9 @@ namespace FoodSurvivors.Boss
         public BossArchetype archetype;
         public float moveSpeed = 6f;
         public float damageMultiplier = 1f;
+        [HideInInspector] public float weaponDamageMultiplier = 1f;
+        [HideInInspector] public float weaponCooldownReduction;
+        [HideInInspector] public float weaponAreaMultiplier = 1f;
 
         [Header("Food Cart Pull Aura")]
         public float pullRadius = 7.5f; // Уменьшенный радиус притяжения
@@ -56,6 +60,9 @@ namespace FoodSurvivors.Boss
         {
             archetype = arch;
             damageMultiplier = dmgMult;
+            weaponDamageMultiplier = 1f;
+            weaponCooldownReduction = 0f;
+            weaponAreaMultiplier = 1f;
 
             try { gameObject.tag = "Boss"; } catch { }
 
@@ -102,12 +109,11 @@ namespace FoodSurvivors.Boss
             string savedWeapons = PlayerPrefs.GetString("PrevRun_Weapons", "");
             string savedPassives = PlayerPrefs.GetString("PrevRun_Passives", "");
 
-            if (!string.IsNullOrEmpty(savedWeapons))
+            bool loadedSavedWeapons = !string.IsNullOrWhiteSpace(savedWeapons) &&
+                                      ApplySavedBuild(savedWeapons, savedPassives, levelOffset);
+            if (!loadedSavedWeapons)
             {
-                ApplySavedBuild(savedWeapons, savedPassives, levelOffset);
-            }
-            else
-            {
+                Debug.Log("[RivalBossController] No usable previous-run weapon build found; equipping the archetype fallback loadout.");
                 ApplyFirstRunDefaultBuild();
             }
 
@@ -136,51 +142,119 @@ namespace FoodSurvivors.Boss
             }
         }
 
-        private void ApplySavedBuild(string wStr, string pStr, int offset)
+        private bool ApplySavedBuild(string wStr, string pStr, int offset)
         {
-            foreach (var wData in wStr.Split(';'))
+            int loadedWeaponCount = 0;
+            foreach (var entry in wStr.Split(';'))
             {
-                string[] parts = wData.Split(':');
-                if (parts.Length == 2) EquipWeaponByName(parts[0], Mathf.Max(1, int.Parse(parts[1]) - offset));
+                if (!TryParseBuildEntry(entry, out string assetName, out int savedLevel)) continue;
+                if (EquipWeaponByName(assetName, Mathf.Max(1, savedLevel - offset)))
+                    loadedWeaponCount++;
             }
-            foreach (var pData in pStr.Split(';'))
+
+            if (loadedWeaponCount == 0) return false;
+
+            foreach (var entry in pStr.Split(';'))
             {
-                string[] parts = pData.Split(':');
-                if (parts.Length == 2) EquipPassiveByName(parts[0], Mathf.Max(1, int.Parse(parts[1]) - offset));
+                if (!TryParseBuildEntry(entry, out string assetName, out int savedLevel)) continue;
+                EquipPassiveByName(assetName, Mathf.Max(1, savedLevel - offset));
             }
+
+            return loadedWeaponCount > 0;
         }
 
-        private void EquipWeaponByName(string name, int lvl)
+        private static bool TryParseBuildEntry(string entry, out string assetName, out int level)
         {
-            WeaponData w = Resources.Load<WeaponData>($"Weapons/{name}");
-#if UNITY_EDITOR
-            if (w == null)
-            {
-                string[] g = UnityEditor.AssetDatabase.FindAssets($"{name} t:WeaponData");
-                if (g.Length > 0) w = UnityEditor.AssetDatabase.LoadAssetAtPath<WeaponData>(UnityEditor.AssetDatabase.GUIDToAssetPath(g[0]));
-            }
-#endif
-            if (w != null && weaponManager != null)
-            {
-                weaponManager.AddWeapon(w);
-                var a = weaponManager.activeWeapons.Find(x => x.weaponData == w);
-                if (a != null) a.currentLevel = lvl;
-            }
+            assetName = null;
+            level = 0;
+            if (string.IsNullOrWhiteSpace(entry)) return false;
+
+            int separator = entry.LastIndexOf(':');
+            if (separator <= 0 || separator >= entry.Length - 1) return false;
+            assetName = entry.Substring(0, separator).Trim();
+            return assetName.Length > 0 && int.TryParse(entry.Substring(separator + 1), out level) && level > 0;
         }
 
-        private void EquipPassiveByName(string name, int lvl)
+        private bool EquipWeaponByName(string name, int lvl)
         {
-            PassiveData p = Resources.Load<PassiveData>($"Passives/{name}");
-#if UNITY_EDITOR
-            if (p == null)
+            WeaponData weapon = FindWeaponData(name);
+            if (weapon == null || weaponManager == null)
             {
-                string[] g = UnityEditor.AssetDatabase.FindAssets($"{name} t:PassiveData");
-                if (g.Length > 0) p = UnityEditor.AssetDatabase.LoadAssetAtPath<PassiveData>(UnityEditor.AssetDatabase.GUIDToAssetPath(g[0]));
+                Debug.LogWarning($"[RivalBossController] Could not resolve saved weapon '{name}' from LevelUpContentCatalog.");
+                return false;
             }
-#endif
-            if (p != null && passiveManager != null)
+
+            weaponManager.AddWeapon(weapon);
+            WeaponBase equipped = weaponManager.activeWeapons.Find(x => x != null && x.weaponData == weapon);
+            if (equipped == null) return false;
+            equipped.currentLevel = Mathf.Clamp(lvl, 1, Mathf.Max(1, weapon.levels != null ? weapon.levels.Count : 1));
+            equipped.isBossWeapon = true;
+            return true;
+        }
+
+        private bool EquipPassiveByName(string name, int lvl)
+        {
+            PassiveData passive = FindPassiveData(name);
+            if (passive == null || passiveManager == null)
             {
-                for (int i = 0; i < lvl; i++) passiveManager.AddOrUpgradePassive(p);
+                Debug.LogWarning($"[RivalBossController] Could not resolve saved passive '{name}' from LevelUpContentCatalog.");
+                return false;
+            }
+
+            for (int i = 0; i < lvl; i++) passiveManager.AddOrUpgradePassive(passive);
+            return true;
+        }
+
+        private static WeaponData FindWeaponData(string name)
+        {
+            WeaponData direct = Resources.Load<WeaponData>($"Weapons/{name}");
+            if (direct != null) return direct;
+
+            LevelUpContentCatalog catalog = Resources.Load<LevelUpContentCatalog>("LevelUpContentCatalog");
+            if (catalog == null || catalog.weapons == null) return null;
+            return catalog.weapons.Find(item => item != null &&
+                (string.Equals(item.name, name, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(item.weaponName, name, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        private static PassiveData FindPassiveData(string name)
+        {
+            PassiveData direct = Resources.Load<PassiveData>($"Passives/{name}");
+            if (direct != null) return direct;
+
+            LevelUpContentCatalog catalog = Resources.Load<LevelUpContentCatalog>("LevelUpContentCatalog");
+            if (catalog == null || catalog.passives == null) return null;
+            return catalog.passives.Find(item => item != null &&
+                (string.Equals(item.name, name, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(item.passiveName, name, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        public void ApplyBuildPassive(PassiveType passiveType, float value)
+        {
+            switch (passiveType)
+            {
+                case PassiveType.SpeedBonus:
+                    moveSpeed += Mathf.Max(0f, value);
+                    break;
+                case PassiveType.DamageBonus:
+                    weaponDamageMultiplier += Mathf.Max(0f, value);
+                    break;
+                case PassiveType.StaminaSynergy:
+                    weaponDamageMultiplier += Mathf.Max(0f, value) * 0.05f;
+                    break;
+                case PassiveType.StaminaDamageBonus:
+                    weaponDamageMultiplier += Mathf.Max(0f, value) * 0.01f;
+                    break;
+                case PassiveType.CooldownReduction:
+                    weaponCooldownReduction = Mathf.Min(0.70f, weaponCooldownReduction + Mathf.Max(0f, value));
+                    break;
+                case PassiveType.AreaBonus:
+                    weaponAreaMultiplier += Mathf.Max(0f, value);
+                    break;
+                case PassiveType.MagnetBonus:
+                    if (archetype == BossArchetype.FoodCart)
+                        pullRadius += Mathf.Max(0f, value);
+                    break;
             }
         }
 

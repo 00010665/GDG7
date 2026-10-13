@@ -204,6 +204,9 @@ namespace FoodSurvivors.Core
             enabled = false;
             Time.timeScale = 0f;
 
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p != null) p.GetComponent<PlayerController>()?.SaveCurrentBuildForNextBoss();
+
             bool isVictory = playerScore > bossScore;
             Debug.Log($"[CompetitionManager] 🏁 ФИНАЛ МАТЧА! Счет: Игрок {playerScore} : {bossScore} Босс -> Победа: {isVictory}");
 
@@ -212,8 +215,6 @@ namespace FoodSurvivors.Core
                 GameOverUI.Instance.ShowGameOver(isVictory);
             }
 
-            GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null) p.GetComponent<PlayerController>()?.SaveCurrentBuildForNextBoss();
         }
     }
 }

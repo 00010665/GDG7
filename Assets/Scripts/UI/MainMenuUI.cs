@@ -75,16 +75,31 @@ namespace FoodSurvivors.UI
 
         private void BindButton(string buttonGameObjectName, UnityEngine.Events.UnityAction action)
         {
-            GameObject btnObj = GameObject.Find(buttonGameObjectName);
-            if (btnObj != null)
+            Button targetButton = null;
+            GameObject[] sceneRoots = SceneManager.GetActiveScene().GetRootGameObjects();
+            foreach (GameObject root in sceneRoots)
             {
-                Button btn = btnObj.GetComponent<Button>();
-                if (btn != null)
+                Button[] buttons = root.GetComponentsInChildren<Button>(true);
+                foreach (Button button in buttons)
                 {
-                    btn.onClick.RemoveAllListeners();
-                    btn.onClick.AddListener(action);
+                    if (button != null && button.gameObject.name == buttonGameObjectName)
+                    {
+                        targetButton = button;
+                        break;
+                    }
                 }
+
+                if (targetButton != null) break;
             }
+
+            if (targetButton == null)
+            {
+                Debug.LogWarning($"[MainMenuUI] Button '{buttonGameObjectName}' was not found in the active scene.");
+                return;
+            }
+
+            targetButton.onClick.RemoveAllListeners();
+            targetButton.onClick.AddListener(action);
         }
 
         private void InitSelections()

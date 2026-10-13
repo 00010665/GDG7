@@ -2,6 +2,7 @@ using UnityEngine;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
 using FoodSurvivors.Player;
+using FoodSurvivors.Boss;
 
 namespace FoodSurvivors.Weapons
 {
@@ -16,6 +17,7 @@ namespace FoodSurvivors.Weapons
 
         protected float cooldownTimer;
         protected PlayerController player;
+        private RivalBossController bossOwner;
 
         protected virtual void Awake()
         {
@@ -64,6 +66,11 @@ namespace FoodSurvivors.Weapons
         public float GetDamage(float baseDmg)
         {
             float mult = player != null ? player.damageMultiplier : 1f;
+            if (player == null && isBossWeapon)
+            {
+                if (bossOwner == null) bossOwner = GetComponentInParent<RivalBossController>();
+                if (bossOwner != null) mult = bossOwner.weaponDamageMultiplier;
+            }
             float calculatedDamage = baseDmg * mult;
 
             // Добавляем целочисленный бонус стамины (например, +5 к урону)
@@ -78,6 +85,11 @@ namespace FoodSurvivors.Weapons
         public float GetCooldown(float baseCooldown)
         {
             float reduction = player != null ? player.cooldownReduction : 0f;
+            if (player == null && isBossWeapon)
+            {
+                if (bossOwner == null) bossOwner = GetComponentInParent<RivalBossController>();
+                if (bossOwner != null) reduction = bossOwner.weaponCooldownReduction;
+            }
             reduction = Mathf.Clamp(reduction, 0f, 0.75f);
             return baseCooldown * (1f - reduction);
         }
@@ -85,6 +97,11 @@ namespace FoodSurvivors.Weapons
         public float GetArea(float baseArea)
         {
             float mult = player != null ? player.areaMultiplier : 1f;
+            if (player == null && isBossWeapon)
+            {
+                if (bossOwner == null) bossOwner = GetComponentInParent<RivalBossController>();
+                if (bossOwner != null) mult = bossOwner.weaponAreaMultiplier;
+            }
             return baseArea * mult;
         }
 

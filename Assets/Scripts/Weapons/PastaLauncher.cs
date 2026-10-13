@@ -93,7 +93,7 @@ namespace FoodSurvivors.Weapons
             }
 
             PastaProjectile proj = projObj.AddComponent<PastaProjectile>();
-            proj.Setup(direction, stats.speed, stats.damage, stats.duration);
+            proj.Setup(direction, stats.speed, GetDamage(stats.damage), stats.duration);
         }
     }
 

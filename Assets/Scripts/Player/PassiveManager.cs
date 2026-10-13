@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
+using FoodSurvivors.Boss;
 
 namespace FoodSurvivors.Player
 {
@@ -12,11 +13,13 @@ namespace FoodSurvivors.Player
         public Dictionary<PassiveData, int> passiveLevels = new Dictionary<PassiveData, int>();
 
         private PlayerController playerController;
+        private RivalBossController bossController;
 
         private void Start()
         {
             playerController = GetComponent<PlayerController>();
-            InitializeStartingPassive();
+            if (playerController != null)
+                InitializeStartingPassive();
         }
 
         private void InitializeStartingPassive()
@@ -154,6 +157,12 @@ namespace FoodSurvivors.Player
                         playerController.magnetRadius += (val > 0 ? val : 1.5f);
                         break;
                 }
+            }
+            else
+            {
+                if (bossController == null) bossController = GetComponent<RivalBossController>();
+                if (bossController != null)
+                    bossController.ApplyBuildPassive(data.passiveType, val);
             }
         }
     }

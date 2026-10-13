@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4ee9657e4444f48a84f9ac230f0e961, type: 3}
+  m_Name: LevelUpContentCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::FoodSurvivors.Data.LevelUpContentCatalog
+  weapons:
+  - {fileID: 11400000, guid: 35e248f8d7f52b5439e6ca82750f3af8, type: 2}
+  - {fileID: 11400000, guid: 0f672c31508a8994fa1062ad90c44b2e, type: 2}
+  - {fileID: 11400000, guid: 1c7eeef97d522b44aaaa98ec8f17dda0, type: 2}
+  - {fileID: 11400000, guid: e825309a545f8e64b9088056fdf6f3e7, type: 2}
+  - {fileID: 11400000, guid: 0856c6a861e6a694ea5662d4d884543c, type: 2}
+  - {fileID: 11400000, guid: 31115d513755c9246b4ba79f450397e3, type: 2}
+  - {fileID: 11400000, guid: 59a4edd59deb4ed4990c5866b6f701d9, type: 2}
+  - {fileID: 11400000, guid: 1da4ad71a180487419ac2f035eaf68b8, type: 2}
+  - {fileID: 11400000, guid: 11ab85055a302a84a919267dd8de53f0, type: 2}
+  passives:
+  - {fileID: 11400000, guid: cc2d7da40c76de540be8df996a337b2d, type: 2}
+  - {fileID: 11400000, guid: 2b199ef7c9de5824181aaa90900591ef, type: 2}
+  - {fileID: 11400000, guid: 67963e7ee97062f489e171b1cc662cbc, type: 2}
+  - {fileID: 11400000, guid: ba25fe50f1cc68347b94775448d0382c, type: 2}
+  - {fileID: 11400000, guid: cb4f3409385722449bf9907179c467f9, type: 2}
+  - {fileID: 11400000, guid: daa4ec763998a474fa3e0ee1d6e9421a, type: 2}
+  - {fileID: 11400000, guid: 9e53834ed553e8f4cb37b4edfe771919, type: 2}
+  - {fileID: 11400000, guid: 6fd40064f847f1a41b0661e85a4ebf27, type: 2}
+  - {fileID: 11400000, guid: 8169b2f5b98d58f40b3529727092bcc2, type: 2}

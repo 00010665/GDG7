@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using FoodSurvivors.Core;
 using FoodSurvivors.Data;
+using FoodSurvivors.UI;
 using FoodSurvivors.Weapons;
 
 namespace FoodSurvivors.Player
@@ -135,7 +136,7 @@ namespace FoodSurvivors.Player
             ReadInput();
 
             // Рывок на Shift или Space только во время игры. На экране выбора Space подтверждает карточку.
-            if (Time.timeScale > 0f && Keyboard.current != null)
+            if (Time.timeScale > 0f && !LevelUpUI.BlocksPlayerDashInput && Keyboard.current != null)
             {
                 if (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame)
                 {
@@ -200,27 +201,27 @@ namespace FoodSurvivors.Player
             WeaponManager wm = GetComponent<WeaponManager>();
             PassiveManager pm = GetComponent<PassiveManager>();
 
-            if (wm != null && wm.activeWeapons.Count > 0)
+            List<string> wList = new List<string>();
+            if (wm != null && wm.activeWeapons != null)
             {
-                List<string> wList = new List<string>();
                 foreach (var w in wm.activeWeapons)
                 {
                     if (w != null && w.weaponData != null)
                         wList.Add($"{w.weaponData.name}:{w.currentLevel}");
                 }
-                PlayerPrefs.SetString("PrevRun_Weapons", string.Join(";", wList));
             }
+            PlayerPrefs.SetString("PrevRun_Weapons", string.Join(";", wList));
 
-            if (pm != null && pm.activePassives.Count > 0)
+            List<string> pList = new List<string>();
+            if (pm != null && pm.activePassives != null)
             {
-                List<string> pList = new List<string>();
                 foreach (var p in pm.activePassives)
                 {
                     if (p != null)
                         pList.Add($"{p.name}:{pm.GetPassiveLevel(p)}");
                 }
-                PlayerPrefs.SetString("PrevRun_Passives", string.Join(";", pList));
             }
+            PlayerPrefs.SetString("PrevRun_Passives", string.Join(";", pList));
             PlayerPrefs.Save();
         }
     }

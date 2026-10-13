@@ -21,18 +21,18 @@ MonoBehaviour:
   isEnabledInRoster: 1
   levels:
   - description: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C 1: \u0423\u0440\u043E\u043D
-      8, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 1,0\u0441,
+      12, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 1,0\u0441,
       \u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E 2"
-    damage: 8
+    damage: 12
     cooldown: 1
     speed: 120
     areaScale: 1
     projectileCount: 2
     duration: 0
   - description: "\u0423\u0440\u043E\u0432\u0435\u043D\u044C 2: \u0423\u0440\u043E\u043D
-      12, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 1,0\u0441,
+      14, \u041F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 1,0\u0441,
       \u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E 3"
-    damage: 12
+    damage: 14
     cooldown: 1
     speed: 150
     areaScale: 1.1
