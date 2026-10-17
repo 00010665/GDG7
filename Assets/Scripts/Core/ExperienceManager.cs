@@ -57,9 +57,20 @@ namespace FoodSurvivors.Core
 
             OnXPChanged?.Invoke(currentXP, xpToNextLevel, currentLevel);
 
-            if (currentXP >= xpToNextLevel)
+            bool leveledUp = false;
+            while (currentXP >= xpToNextLevel)
             {
                 LevelUp();
+                leveledUp = true;
+            }
+
+            if (leveledUp)
+            {
+                Time.timeScale = 0f;
+                if (LevelUpUI.Instance != null)
+                    LevelUpUI.Instance.ShowLevelUpWindow();
+                else
+                    Time.timeScale = 1f;
             }
         }
 
@@ -73,16 +84,6 @@ namespace FoodSurvivors.Core
 
             OnXPChanged?.Invoke(currentXP, xpToNextLevel, currentLevel);
 
-            Time.timeScale = 0f;
-
-            if (LevelUpUI.Instance != null)
-            {
-                LevelUpUI.Instance.ShowLevelUpWindow();
-            }
-            else
-            {
-                Time.timeScale = 1f;
-            }
         }
     }
 }

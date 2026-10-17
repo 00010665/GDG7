@@ -112,6 +112,22 @@ namespace FoodSurvivors.Core
             }
         }
 
+        /// <summary>Starts the boss phase immediately from the developer menu.</summary>
+        public void ForceBossPhase()
+        {
+            if (bossSpawned || !enabled) return;
+            bossSpawned = true;
+            matchTimer = Mathf.Max(matchTimer, prepPhaseDuration);
+            StartCoroutine(TriggerBossIntroCutscene());
+        }
+
+        /// <summary>Ends the current match immediately and shows its result screen.</summary>
+        public void ForceEndMatch()
+        {
+            if (!enabled) return;
+            EndMatch();
+        }
+
         private IEnumerator TriggerBossIntroCutscene()
         {
             isBossPhase = true;
@@ -140,7 +156,7 @@ namespace FoodSurvivors.Core
                 cam.target = originalTarget;
             }
 
-            Time.timeScale = 1f; // Разморозка
+            Time.timeScale = CheatMenu.Instance != null && CheatMenu.Instance.showMenu ? 0f : 1f; // Не размораживаем игру поверх открытого чит-меню.
             Debug.Log("[CompetitionManager] ⚔️ КУЛИНАРНЫЙ БАТЛ НАЧАЛСЯ!");
         }
 

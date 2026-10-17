@@ -17,6 +17,7 @@ namespace FoodSurvivors.UI
         public string description;
         public string typeLabel;
         public Color optionColor;
+        public Sprite icon;
         public System.Action onSelect;
     }
 
@@ -264,6 +265,7 @@ namespace FoodSurvivors.UI
                     description = capturedWeapon.description,
                     typeLabel = "[Блюдо]",
                     optionColor = capturedWeapon.weaponColor,
+                    icon = FoodIconLibrary.Get(capturedWeapon.name),
                     onSelect = () =>
                     {
                         if (wm != null)
@@ -291,6 +293,7 @@ namespace FoodSurvivors.UI
                     description = capturedPassive.description,
                     typeLabel = "[Талант]",
                     optionColor = capturedPassive.passiveColor,
+                    icon = FoodIconLibrary.Get(capturedPassive.name),
                     onSelect = () =>
                     {
                         if (pm != null)
@@ -333,7 +336,11 @@ namespace FoodSurvivors.UI
                         cardTypeTexts[i].text = opt.typeLabel;
 
                     if (cardColorPreviews != null && i < cardColorPreviews.Length && cardColorPreviews[i] != null)
-                        cardColorPreviews[i].color = opt.optionColor;
+                    {
+                        cardColorPreviews[i].sprite = opt.icon;
+                        cardColorPreviews[i].preserveAspect = true;
+                        cardColorPreviews[i].color = opt.icon != null ? Color.white : opt.optionColor;
+                    }
 
                     int idx = i;
                     cardButtons[i].onClick.RemoveAllListeners();

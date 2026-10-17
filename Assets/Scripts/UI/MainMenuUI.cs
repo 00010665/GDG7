@@ -288,7 +288,13 @@ namespace FoodSurvivors.UI
             if (chefArmorText != null) chefArmorText.text = $"Броня: {chef.armor}";
             if (chefWeaponText != null) chefWeaponText.text = $"Блюдо: {(chef.startingWeapon != null ? chef.startingWeapon.weaponName : "Нет")}";
             if (chefPassiveText != null) chefPassiveText.text = $"Пассивка: {(chef.startingPassive != null ? chef.startingPassive.passiveName : "Нет")}";
-            if (chefColorPreview != null) chefColorPreview.color = chef.chefColor;
+            if (chefColorPreview != null)
+            {
+                Sprite portrait = FoodIconLibrary.Get(chef.name);
+                chefColorPreview.sprite = portrait;
+                chefColorPreview.preserveAspect = true;
+                chefColorPreview.color = portrait != null ? Color.white : chef.chefColor;
+            }
         }
 
         public void UpdateLevelDisplay()

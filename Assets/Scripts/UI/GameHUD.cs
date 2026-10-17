@@ -234,7 +234,8 @@ namespace FoodSurvivors.UI
 
                 GameObject slot = weaponSlotUIList[i];
                 int maxLvl = w.weaponData.levels != null ? w.weaponData.levels.Count : 5;
-                SetSlotData(slot, w.weaponData.weaponColor, $"{w.weaponData.weaponName}\n<b>{w.currentLevel}/{maxLvl}</b>");
+                SetSlotData(slot, w.weaponData.icon != null ? w.weaponData.icon : FoodIconLibrary.Get(w.weaponData.name),
+                    w.weaponData.weaponColor, $"{w.weaponData.weaponName}\n<b>{w.currentLevel}/{maxLvl}</b>");
             }
         }
 
@@ -263,7 +264,8 @@ namespace FoodSurvivors.UI
                 GameObject slot = passiveSlotUIList[i];
                 int curLvl = pm.GetPassiveLevel(p);
                 int maxLvl = p.levels != null ? p.levels.Count : 5;
-                SetSlotData(slot, p.passiveColor, $"{p.passiveName}\n<b>{curLvl}/{maxLvl}</b>");
+                SetSlotData(slot, p.icon != null ? p.icon : FoodIconLibrary.Get(p.name),
+                    p.passiveColor, $"{p.passiveName}\n<b>{curLvl}/{maxLvl}</b>");
             }
         }
 
@@ -282,19 +284,21 @@ namespace FoodSurvivors.UI
             Image bg = slotObj.GetComponent<Image>();
             bg.color = new Color(0.12f, 0.12f, 0.18f, 0.85f);
 
-            GameObject colorBox = new GameObject("ColorPreview", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            colorBox.transform.SetParent(slotObj.transform, false);
-            RectTransform boxRt = colorBox.GetComponent<RectTransform>();
+            GameObject iconObj = new GameObject("ItemIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            iconObj.transform.SetParent(slotObj.transform, false);
+            RectTransform boxRt = iconObj.GetComponent<RectTransform>();
             boxRt.anchorMin = new Vector2(0.05f, 0.5f);
             boxRt.anchorMax = new Vector2(0.05f, 0.5f);
             boxRt.pivot = new Vector2(0f, 0.5f);
             boxRt.anchoredPosition = new Vector2(3f, 0f);
-            boxRt.sizeDelta = new Vector2(20f, 20f);
+            boxRt.sizeDelta = new Vector2(26f, 26f);
+            Image iconImage = iconObj.GetComponent<Image>();
+            iconImage.preserveAspect = true;
 
             GameObject txtObj = new GameObject("SlotText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             txtObj.transform.SetParent(slotObj.transform, false);
             RectTransform txtRt = txtObj.GetComponent<RectTransform>();
-            txtRt.anchorMin = new Vector2(0.28f, 0f);
+            txtRt.anchorMin = new Vector2(0.30f, 0f);
             txtRt.anchorMax = new Vector2(1f, 1f);
             txtRt.sizeDelta = Vector2.zero;
 
@@ -306,15 +310,20 @@ namespace FoodSurvivors.UI
             return slotObj;
         }
 
-        private void SetSlotData(GameObject slotObj, Color itemColor, string labelText)
+        private void SetSlotData(GameObject slotObj, Sprite itemIcon, Color itemColor, string labelText)
         {
             if (slotObj == null) return;
 
-            Transform colorBox = slotObj.transform.Find("ColorPreview");
-            if (colorBox != null)
+            Transform iconObject = slotObj.transform.Find("ItemIcon");
+            if (iconObject != null)
             {
-                Image img = colorBox.GetComponent<Image>();
-                if (img != null) img.color = itemColor;
+                Image img = iconObject.GetComponent<Image>();
+                if (img != null)
+                {
+                    img.sprite = itemIcon;
+                    img.color = itemIcon != null ? Color.white : itemColor;
+                    img.enabled = itemIcon != null;
+                }
             }
 
             Transform txtObj = slotObj.transform.Find("SlotText");

@@ -24,7 +24,7 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 1f6fa52eefcea2447846af7158c249af, type: 3}
     volume: 0.48
     playbackSpeed: 1
-  bossCourierFadeOutSeconds: 8
+  bossCourierFadeOutSeconds: 3
   bossFoodTruck:
     clip: {fileID: 8300000, guid: b649c5fa53a224548b861754800ddf6d, type: 3}
     volume: 0.75
